@@ -150,13 +150,54 @@ h1 span{color:var(--acc)}
 .tot div{flex:1;background:var(--card);border-radius:14px;padding:10px 6px;text-align:center}
 .tot b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
 .tot small{font-size:11.5px;color:var(--mut);font-weight:600}
+
+/* v6 */
+.meta{justify-content:space-between;align-items:center;gap:8px}
+.timer{position:static;font-size:13px;white-space:nowrap}
+.banner{align-self:stretch;margin-top:8px;background:#fff1e6;color:#a1461c;border-radius:12px;padding:7px 8px 7px 12px;font-size:14px;font-weight:700;display:flex;align-items:center;gap:8px}
+.banner span{flex:1;line-height:1.35}
+.banner button{border:0;background:rgba(161,70,28,.12);color:#a1461c;width:30px;height:30px;border-radius:50%;font-size:14px;flex:none}
+.ask{margin-top:10px;color:var(--mut);font-size:15px;font-weight:600;text-align:center}
+.btn.bad{flex:1;background:var(--card);color:var(--bad);box-shadow:0 2px 8px rgba(60,35,10,.1)}
+.btn.good{flex:1.4;color:#fff;background:linear-gradient(135deg,#34c27a,var(--ok));box-shadow:0 8px 18px rgba(31,157,87,.3)}
+.score{font-size:64px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:8px}
+.chip{background:#fdecec;color:var(--bad);border-radius:10px;padding:5px 9px;font-size:14px;font-weight:700}
+.kh{font-size:15px;margin:4px 2px 8px}
+.klist{background:var(--card);border-radius:16px;overflow:hidden;margin-bottom:12px}
+.krow{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid var(--line)}
+.krow:last-child{border-bottom:0}
+.kf{flex:1;font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.kf small{display:block;font-size:12.5px;color:var(--mut);font-weight:600;margin-top:2px}
+.kdot{width:12px;height:12px;border-radius:50%;flex:none;background:#e3d9cc}
+.kdot.lo{background:var(--ok)} .kdot.mid{background:#f0a020} .kdot.hard{background:var(--bad)}
+.banner.hidden,#abWrap.hidden{display:none}
+.kbtn{border:0;background:#f6efe5;color:var(--acc);font-weight:700;font-size:14px;border-radius:10px;padding:8px 12px}
+details.kg{background:var(--card);border-radius:16px;margin-bottom:10px;overflow:hidden}
+details.kg summary{list-style:none;padding:13px 14px;font-weight:700;font-size:15px;display:flex;justify-content:space-between;gap:8px}
+details.kg summary::-webkit-details-marker{display:none}
+details.kg summary small{color:var(--mut);font-weight:600;margin-left:auto}
+details.kg summary::after{content:"▾";color:var(--mut)}
+details.kg[open] summary::after{content:"▴"}
+details.kg .gd{font-size:13px;color:var(--mut);padding:0 14px 10px;line-height:1.4}
+details.kg .klist{margin:0;border-radius:0;border-top:1px solid var(--line)}
+.kbig{display:flex;gap:10px;margin-bottom:14px}
+.kbig .btn{flex:1;font-size:15.5px;height:52px}
+.kbig .t1{background:var(--card);box-shadow:0 2px 8px rgba(60,35,10,.1)}
+.kbig .t2{color:#fff;background:linear-gradient(135deg,var(--acc2),var(--acc))}
+.kbig .btn:disabled{opacity:.45}
+.info{font-weight:500 !important;font-size:15px !important}
 </style>
 </head>
 <body>
 <div class="app">
   <header>
     <h1>Soro<span>ban</span></h1>
-    <div class="hbtns"><button class="iconbtn" id="progBtn" aria-label="Postęp">📈</button><button class="iconbtn" id="gear" aria-label="Ustawienia">⚙︎</button></div>
+    <div class="hbtns">
+      <button class="iconbtn" id="keysBtn" aria-label="Trudne układy">🎯</button>
+      <button class="iconbtn" id="progBtn" aria-label="Postęp">📈</button>
+      <button class="iconbtn" id="gear" aria-label="Ustawienia">⚙︎</button>
+    </div>
   </header>
 
   <div class="pills">
@@ -173,21 +214,21 @@ h1 span{color:var(--acc)}
   </div>
 
   <div class="card problem">
-    <div class="timer" id="timer"></div>
-    <div class="meta"><button id="metaBtn"></button></div>
+    <div class="meta"><button id="metaBtn"></button><div class="timer" id="timer"></div></div>
+    <div class="banner hidden" id="banner"></div>
     <div class="pbody" id="pbody"></div>
   </div>
 
-  <div class="frame"><div class="rods" id="rods"></div></div>
-  <div class="value" id="value"></div>
-
-  <div class="actions">
-    <button class="btn sec" id="clearBtn">Wyczyść</button>
-    <button class="btn pri" id="checkBtn">Sprawdź</button>
+  <div id="abWrap">
+    <div class="frame"><div class="rods" id="rods"></div></div>
+    <div class="value" id="value" style="margin-top:6px"></div>
   </div>
+
+  <div class="actions" id="actions"></div>
 </div>
 
 <div class="overlay" id="overlay"></div>
+
 <div class="sheet" id="sheet">
   <div class="grab"></div>
   <h2>Ustawienia</h2>
@@ -201,47 +242,50 @@ h1 span{color:var(--acc)}
     <div class="seg" data-key="display"><button data-val="all">Wszystkie</button><button data-val="seq">Po kolei</button><button data-val="flash">Błysk</button></div></div>
   <div class="set" id="speedSet"><div class="t">Tempo błysku</div>
     <div class="seg" data-key="speed"><button data-val="2000">2 s</button><button data-val="1500">1,5 s</button><button data-val="1000">1 s</button><button data-val="700">0,7 s</button></div></div>
+  <div class="set"><div class="t">Dobór zadań</div>
+    <div class="seg" data-key="pick"><button data-val="smart">Pod moje słabe układy</button><button data-val="rand">Losowo</button></div></div>
   <div class="group">
+    <label class="tog">Pokazuj liczydło w apce <span class="sw"><input type="checkbox" data-opt="showAbacus"><span></span></span></label>
     <label class="tog">Pokazuj liczbę z liczydła <span class="sw"><input type="checkbox" data-opt="showVal"><span></span></span></label>
     <label class="tog">Czyść liczydło przy nowym zadaniu <span class="sw"><input type="checkbox" data-opt="autoClear"><span></span></span></label>
     <label class="tog">Dźwięk koralików <span class="sw"><input type="checkbox" data-opt="sound"><span></span></span></label>
   </div>
-  <div class="help">Przesuń koralik palcem w górę lub w dół albo po prostu go dotknij. Górny koralik to 5, każdy dolny to 1. Kropki na belce oznaczają jedności i tysiące. Po naciśnięciu „Sprawdź” koraliki same ustawiają wynik.<br>Tryb „Błysk” pokazuje liczby same, jedna po drugiej, jak na treningu anzan.</div>
+  <div class="help">Jak to działa: liczysz zadanie na swoim sorobanie, naciskasz „Pokaż wynik” i oceniasz: <b>Dobrze</b> albo <b>Źle</b>. Przy „Źle” to samo zadanie wraca, aż wyjdzie. Do statystyk liczy się pierwsza próba i czas do „Pokaż wynik”.<br>„Pod moje słabe układy” – apka zapamiętuje, przy jakich ruchach koralików się mylisz lub zwalniasz, i częściej je podsuwa.<br>Tryb „Błysk” pokazuje liczby same, jedna po drugiej (trening anzan).</div>
   <div class="row2">
-    <button class="btn reset" id="resetStats">Zeruj wyniki</button>
+    <button class="btn reset" id="resetStats">Zeruj licznik</button>
     <button class="btn done" id="doneBtn">Gotowe</button>
   </div>
 </div>
 
 <div class="sheet psheet" id="psheet">
   <div class="grab"></div>
-  <h2>Twój postęp</h2>
-  <div class="seg" style="margin-bottom:12px"><button data-pf="level" class="sel">Ten poziom</button><button data-pf="all">Wszystkie zadania</button></div>
+  <div class="seg" id="ptabs" style="margin-bottom:12px"><button data-tab="prog">📈 Postęp</button><button data-tab="keys">🎯 Trudne układy</button></div>
+  <div class="seg" id="pfilter" style="margin-bottom:12px"><button data-pf="level" class="sel">Ten poziom</button><button data-pf="all">Wszystkie zadania</button></div>
   <div id="progBody"></div>
   <div class="sync" id="syncInfo"></div>
   <div class="row2"><button class="btn done" id="pDone">Zamknij</button></div>
 </div>
 
 <script>
-const RODS = 9, BH = 28, GAP = 4;
-const UPPER_H = 68, LOWER_H = 158;
+const RODS = 9, BH = 28, GAP = 4, UPPER_H = 68, LOWER_H = 158;
 const $ = id => document.getElementById(id);
 
-let S = {digits:2, terms:3, mdig:1, mode:'add', display:'all', speed:1000, showVal:true, autoClear:true, sound:true};
+let S = {digits:2, terms:3, mdig:1, mode:'add', display:'all', speed:1000, pick:'smart',
+         showAbacus:true, showVal:true, autoClear:true, sound:true};
 let stats = {ok:0, all:0, streak:0, best:0};
 try { Object.assign(S, JSON.parse(localStorage.getItem('soroban_set')||'{}')); } catch(e){}
 try { Object.assign(stats, JSON.parse(localStorage.getItem('soroban_stats')||'{}')); } catch(e){}
 if (!['all','seq','flash'].includes(S.display)) S.display='all';
 function save(){ try{ localStorage.setItem('soroban_set',JSON.stringify(S)); localStorage.setItem('soroban_stats',JSON.stringify(stats)); }catch(e){} }
 
-/* ---------- dźwięk ---------- */
+/* ================= dźwięk ================= */
 let actx = null;
 function clack(){
   if (!S.sound) return;
   try{
     actx = actx || new (window.AudioContext||window.webkitAudioContext)();
     if (actx.state==='suspended') actx.resume();
-    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    const t=actx.currentTime, o=actx.createOscillator(), g=actx.createGain();
     o.type='triangle';
     o.frequency.setValueAtTime(1700,t); o.frequency.exponentialRampToValueAtTime(500,t+0.035);
     g.gain.setValueAtTime(0.22,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.06);
@@ -249,59 +293,44 @@ function clack(){
   }catch(e){}
 }
 
-/* ---------- liczydło ---------- */
-const heaven = Array(RODS).fill(0);
-const earth  = Array(RODS).fill(0);
-const beadEls = [];
+/* ================= liczydło ================= */
+const heaven = Array(RODS).fill(0), earth = Array(RODS).fill(0), beadEls = [];
 let drag = null;
-
 for (let r=0; r<RODS; r++){
-  const rod = document.createElement('div'); rod.className='rod';
-  const up = document.createElement('div'); up.className='upper'; up.innerHTML='<div class="stick"></div>';
-  const h = document.createElement('div'); h.className='bead';
-  h.addEventListener('pointerdown', ev=>down(ev,r,'h'));
-  up.appendChild(h);
-  const beam = document.createElement('div');
-  beam.className = 'beam' + (((RODS-1-r)%3===0) ? ' dot' : '');
-  const lo = document.createElement('div'); lo.className='lower'; lo.innerHTML='<div class="stick"></div>';
+  const rod=document.createElement('div'); rod.className='rod';
+  const up=document.createElement('div'); up.className='upper'; up.innerHTML='<div class="stick"></div>';
+  const h=document.createElement('div'); h.className='bead';
+  h.addEventListener('pointerdown', ev=>down(ev,r,'h')); up.appendChild(h);
+  const beam=document.createElement('div'); beam.className='beam'+(((RODS-1-r)%3===0)?' dot':'');
+  const lo=document.createElement('div'); lo.className='lower'; lo.innerHTML='<div class="stick"></div>';
   const es=[];
-  for (let i=0;i<4;i++){
-    const b=document.createElement('div'); b.className='bead';
-    b.addEventListener('pointerdown', ev=>down(ev,r,i));
-    lo.appendChild(b); es.push(b);
-  }
-  rod.append(up,beam,lo); $('rods').appendChild(rod);
-  beadEls.push({h, e:es});
+  for (let i=0;i<4;i++){ const b=document.createElement('div'); b.className='bead';
+    b.addEventListener('pointerdown', ev=>down(ev,r,i)); lo.appendChild(b); es.push(b); }
+  rod.append(up,beam,lo); $('rods').appendChild(rod); beadEls.push({h,e:es});
 }
-
 function down(ev,r,b){ ev.preventDefault(); stopAnim(); drag={r,b,y:ev.clientY,done:false}; }
 document.addEventListener('pointermove', ev=>{
-  if (!drag || drag.done) return;
-  const dy = ev.clientY - drag.y;
-  if (Math.abs(dy) > 10){ move(drag.r, drag.b, dy<0 ? 'up' : 'down'); drag.done = true; }
+  if (!drag||drag.done) return;
+  const dy=ev.clientY-drag.y;
+  if (Math.abs(dy)>10){ move(drag.r,drag.b,dy<0?'up':'down'); drag.done=true; }
 });
-document.addEventListener('pointerup', ()=>{ if (drag && !drag.done) move(drag.r, drag.b, 'tap'); drag=null; });
+document.addEventListener('pointerup', ()=>{ if (drag&&!drag.done) move(drag.r,drag.b,'tap'); drag=null; });
 document.addEventListener('pointercancel', ()=>{ drag=null; });
-
 function move(r,b,dir){
   const ph=heaven[r], pe=earth[r];
-  if (b==='h') heaven[r] = dir==='tap' ? ph^1 : (dir==='down' ? 1 : 0);
-  else if (dir==='tap') earth[r] = b < pe ? b : b+1;
-  else if (dir==='up')  earth[r] = Math.max(pe, b+1);
-  else                  earth[r] = Math.min(pe, b);
-  if (ph!==heaven[r] || pe!==earth[r]){ clack(); draw(); }
+  if (b==='h') heaven[r] = dir==='tap' ? ph^1 : (dir==='down'?1:0);
+  else if (dir==='tap') earth[r] = b<pe ? b : b+1;
+  else if (dir==='up')  earth[r] = Math.max(pe,b+1);
+  else                  earth[r] = Math.min(pe,b);
+  if (ph!==heaven[r]||pe!==earth[r]){ clack(); draw(); }
 }
-function value(){ let v=0; for (let r=0;r<RODS;r++) v = v*10 + heaven[r]*5 + earth[r]; return v; }
+function value(){ let v=0; for (let r=0;r<RODS;r++) v=v*10+heaven[r]*5+earth[r]; return v; }
 function draw(){
   for (let r=0;r<RODS;r++){
     const {h,e}=beadEls[r];
-    h.style.top = (heaven[r] ? UPPER_H-GAP-BH : GAP) + 'px';
-    h.classList.toggle('on', !!heaven[r]);
-    for (let i=0;i<4;i++){
-      const on = i < earth[r];
-      e[i].style.top = (on ? GAP + i*BH : LOWER_H-GAP-(4-i)*BH) + 'px';
-      e[i].classList.toggle('on', on);
-    }
+    h.style.top=(heaven[r]?UPPER_H-GAP-BH:GAP)+'px'; h.classList.toggle('on',!!heaven[r]);
+    for (let i=0;i<4;i++){ const on=i<earth[r];
+      e[i].style.top=(on?GAP+i*BH:LOWER_H-GAP-(4-i)*BH)+'px'; e[i].classList.toggle('on',on); }
   }
   $('value').innerHTML = S.showVal ? 'Na liczydle: <b>'+value()+'</b>' : '';
 }
@@ -310,133 +339,328 @@ function stopAnim(){ animTimers.forEach(clearTimeout); animTimers=[]; }
 function clearAbacus(){ stopAnim(); heaven.fill(0); earth.fill(0); draw(); }
 function setAbacus(n){
   stopAnim();
-  const s = String(n).padStart(RODS,'0').slice(-RODS);
-  let delay = 150;
+  const s=String(n).padStart(RODS,'0').slice(-RODS);
+  let delay=150;
   for (let r=0;r<RODS;r++){
     const d=+s[r], h=d>=5?1:0, e=d%5;
     if (heaven[r]===h && earth[r]===e) continue;
-    animTimers.push(setTimeout(()=>{ heaven[r]=h; earth[r]=e; clack(); draw(); }, delay));
-    delay += 190;
+    animTimers.push(setTimeout(()=>{ heaven[r]=h; earth[r]=e; if (S.showAbacus) clack(); draw(); }, delay));
+    delay+=190;
   }
 }
 
-/* ---------- zadania ---------- */
-let tStart=0, terms=[], answer=0, seqIdx=0, checked=false, lastOk=null, userVal=0, flashTimer=null;
-const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+/* ================= pomocnicze ================= */
+const rnd = (a,b) => a+Math.floor(Math.random()*(b-a+1));
 const num = () => { const d=S.digits; return rnd(d===1?1:10**(d-1), 10**d-1); };
 const sym = op => op==='+' ? '+' : op==='x' ? '×' : '−';
 const disp = () => S.mode==='mul' ? 'all' : S.display;
-const pl = (n,a,b,c) => n===1 ? a : (n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20)) ? b : c;
+const pl = (n,a,b,c) => n===1 ? a : (n%10>=2 && n%10<=4 && (n%100<10||n%100>=20)) ? b : c;
+const cyf = n => n+' '+pl(n,'cyfra','cyfry','cyfr');
+function fmtT(s){
+  if (s==null) return '–';
+  return s<60 ? s.toFixed(1).replace('.',',')+' s' : Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0')+' min';
+}
+function curLevel(){
+  return S.mode==='mul' ? {m:'mul', d:S.digits, n:S.mdig, f:0}
+                        : {m:S.mode, d:S.digits, n:S.terms, f:S.display==='flash'?1:0};
+}
+const lkey = r => r.m+'|'+r.d+'|'+r.n+'|'+(r.f?1:0);
+function levelName(L){
+  if (L.m==='mul') return cyf(L.d)+' × '+cyf(L.n);
+  const mn={add:'dodawanie',sub:'odejmowanie',mix:'mieszane'}[L.m];
+  return cyf(L.d)+' · '+L.n+' '+pl(L.n,'liczba','liczby','liczb')+' · '+mn+(L.f?' · błysk':'');
+}
 
-function gen(){
-  clearTimeout(flashTimer);
-  const n=S.terms; terms=[];
+/* ================= układy koralików =================
+   Klucze: '+4s' mała piątka, '+7t' dziesiątka, '+6m' mieszane (10 i 5),
+   to samo z '-', 'c+' / 'c-' łańcuch przeniesień, 'x7x8' iloczyn cyfr. */
+function analyze(terms, mode){
+  const keys=new Set();
+  if (mode==='mul'){
+    for (const x of String(terms[0].v)) for (const y of String(terms[1].v)){
+      const p=+x, q=+y; if (p>1 && q>1) keys.add('x'+Math.min(p,q)+'x'+Math.max(p,q));
+    }
+    return [...keys];
+  }
+  const s=Array(16).fill(0); let depth=0;
+  function add(p,n){
+    const c=s[p];
+    if (c+n<=9){ if (n<5 && c<5 && c+n>=5) keys.add('+'+n+'s'); s[p]=c+n; }
+    else {
+      const k=10-n;
+      keys.add('+'+n+((c>=5 && c-5<k && k<5)?'m':'t'));
+      s[p]=c+n-10; depth++; if (depth>=2) keys.add('c+'); add(p+1,1); depth--;
+    }
+  }
+  function sub(p,n){
+    const c=s[p];
+    if (c>=n){ if (n<5 && c>=5 && c-5<n) keys.add('-'+n+'s'); s[p]=c-n; }
+    else {
+      const k=10-n;
+      keys.add('-'+n+((c<5 && c+k>=5 && k<5)?'m':'t'));
+      s[p]=c+k; depth++; if (depth>=2) keys.add('c-'); sub(p+1,1); depth--;
+    }
+  }
+  terms.forEach((t,i)=>{
+    const ds=String(t.v).split('').map(Number), L=ds.length;
+    if (i===0){ ds.forEach((d,j)=>{ s[L-1-j]=d; }); return; }
+    ds.forEach((d,j)=>{ if (d) (t.op==='+'?add:sub)(L-1-j,d); });
+  });
+  return [...keys];
+}
+const keyFam = k => k[0]==='x' ? 'x' : k[0]==='c' ? k[1] : k[0];
+const keyCat = k => k[0]==='x' ? 'x' : k[0]==='c' ? 'c' : k[0]+k[2];
+function keyName(k){
+  if (k[0]==='x'){ const [a,b]=k.slice(1).split('x'); return a+' × '+b; }
+  if (k==='c+') return 'Przeniesienie przez kilka rzędów';
+  if (k==='c-') return 'Pożyczka przez kilka rzędów';
+  const n=+k[1], t=k[2];
+  if (k[0]==='+') return t==='s' ? '+'+n+' = +5 −'+(5-n) : t==='t' ? '+'+n+' = −'+(10-n)+' +10' : '+'+n+' = +10 −5 +'+(n-5);
+  return t==='s' ? '−'+n+' = −5 +'+(5-n) : t==='t' ? '−'+n+' = −10 +'+(10-n) : '−'+n+' = −10 +5 −'+(n-5);
+}
+const shortName = k => (k[0]==='c' ? (k==='c+'?'99 + 1 (łańcuch)':'100 − 1 (łańcuch)') : keyName(k));
+const R = (a,b) => Array.from({length:b-a+1},(_,i)=>a+i);
+const GROUPS = [
+  {name:'Mała piątka · dodawanie', d:'Brakuje dolnych koralików: dosuwasz piątkę i zabierasz resztę.', keys:R(1,4).map(n=>'+'+n+'s')},
+  {name:'Mała piątka · odejmowanie', d:'Brakuje dolnych koralików do zabrania: odsuwasz piątkę i dokładasz resztę.', keys:R(1,4).map(n=>'-'+n+'s')},
+  {name:'Dziesiątka · dodawanie', d:'W rzędzie brakuje miejsca: zabierasz dopełnienie do 10 i dodajesz 1 w rzędzie wyżej.', keys:R(1,9).map(n=>'+'+n+'t')},
+  {name:'Dziesiątka · odejmowanie', d:'W rzędzie jest za mało: zabierasz 1 z rzędu wyżej i dokładasz dopełnienie do 10.', keys:R(1,9).map(n=>'-'+n+'t')},
+  {name:'Mieszane · dodawanie', d:'Dziesiątka i piątka w jednym ruchu – zwykle najtrudniejsze.', keys:R(6,9).map(n=>'+'+n+'m')},
+  {name:'Mieszane · odejmowanie', d:'Pożyczka z dziesiątki i piątka w jednym ruchu.', keys:R(6,9).map(n=>'-'+n+'m')},
+  {name:'Łańcuchy', d:'Przeniesienie lub pożyczka przechodzi przez kilka rzędów, np. 999 + 1 albo 1000 − 1.', keys:['c+','c-']},
+  {name:'Tabliczka mnożenia', d:'Iloczyny cyfr pojawiające się w mnożeniu.', keys:[].concat(...R(2,9).map(a=>R(a,9).map(b=>'x'+a+'x'+b)))}
+];
+
+/* ================= historia i statystyki układów ================= */
+let hist=[];
+try{ hist=JSON.parse(localStorage.getItem('soroban_hist')||'[]'); }catch(e){}
+if (!Array.isArray(hist)) hist=[];
+function saveHist(){ try{ localStorage.setItem('soroban_hist', JSON.stringify(hist.slice(-20000))); }catch(e){} ksCache=null; }
+const dayKey = t => { const d=new Date(t); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'); };
+function addRecord(rec){ hist.push(rec); saveHist(); pushDay(dayKey(rec.t)); }
+
+let ksCache=null;
+function keyStats(){
+  if (ksCache) return ksCache;
+  const recent=hist.slice(-3000), lvT={}, med={}, st={};
+  recent.forEach(r=>{ if (r.ok && r.s) (lvT[lkey(r)]=lvT[lkey(r)]||[]).push(r.s); });
+  for (const k in lvT){ const a=lvT[k].sort((x,y)=>x-y); med[k]=a[a.length>>1]; }
+  recent.forEach(r=>{
+    if (!r.k) return; const m=med[lkey(r)];
+    r.k.forEach(k=>{
+      const o=st[k]||(st[k]={seen:0,err:0,slow:0,ns:0});
+      o.seen++;
+      if (!r.ok) o.err++; else if (m && r.s){ o.slow+=r.s/m; o.ns++; }
+    });
+  });
+  for (const k in st){
+    const o=st[k]; o.rate=o.err/o.seen; o.sl=o.ns?o.slow/o.ns:1;
+    o.score=(o.err+0.5)/(o.seen+1.5) + Math.max(0,o.sl-1)*0.5*Math.min(1,o.ns/3);
+  }
+  return ksCache=st;
+}
+const PRIOR=0.3;
+
+/* ================= generowanie zadań ================= */
+function genRaw(){
+  const n=S.terms, terms=[];
   if (S.mode==='mul'){
-    const b = S.mdig===1 ? rnd(2,9) : rnd(11,99);
-    terms.push({op:'+',v:num()}, {op:'x',v:b});
+    terms.push({op:'+',v:num()}, {op:'x',v:S.mdig===1?rnd(2,9):rnd(11,99)});
   } else if (S.mode==='add'){
     for (let i=0;i<n;i++) terms.push({op:'+',v:num()});
   } else if (S.mode==='sub'){
     const subs=[]; for (let i=0;i<n-1;i++) subs.push(num());
-    terms.push({op:'+', v: subs.reduce((a,b)=>a+b,0) + num()});
+    terms.push({op:'+', v:subs.reduce((a,b)=>a+b,0)+num()});
     subs.forEach(v=>terms.push({op:'-',v}));
   } else {
     let run=num(); terms.push({op:'+',v:run});
-    for (let i=1;i<n;i++){
-      const v=num(); let op = Math.random()<0.5 ? '-' : '+';
-      if (op==='-' && v>run) op='+';
-      run += op==='+' ? v : -v;
-      terms.push({op,v});
-    }
+    for (let i=1;i<n;i++){ const v=num(); let op=Math.random()<0.5?'-':'+'; if (op==='-'&&v>run) op='+';
+      run+=op==='+'?v:-v; terms.push({op,v}); }
   }
-  answer = S.mode==='mul' ? terms[0].v*terms[1].v : terms.reduce((a,t)=>a+(t.op==='+'?t.v:-t.v),0);
-  seqIdx = disp()==='flash' ? -1 : 0;
-  tStart = disp()==='flash' ? 0 : Date.now();
-  checked=false; lastOk=null; lastSec=null;
+  const answer = S.mode==='mul' ? terms[0].v*terms[1].v : terms.reduce((a,t)=>a+(t.op==='+'?t.v:-t.v),0);
+  return {terms, answer, keys:analyze(terms,S.mode)};
+}
+let focus=null, test=null;
+function pickProblem(){
+  const st=keyStats(), sc=k=>st[k]?st[k].score:PRIOR;
+  if (focus){
+    let best=null, bc=0;
+    for (let i=0;i<600;i++){
+      const c=genRaw(), m=c.keys.filter(k=>focus.keys.includes(k)).length;
+      if (m>bc || (m===bc && m>0 && Math.random()<0.3)){ best=c; bc=m; }
+      if (bc>=2 || (bc>=1 && i>80)) break;
+    }
+    focus.miss=!best; return best||genRaw();
+  }
+  if (test){
+    const covered=new Set(test.cats); let best=null, bv=-1;
+    for (let i=0;i<40;i++){
+      const c=genRaw(); let v=0;
+      new Set(c.keys.map(keyCat)).forEach(x=>{ if (!covered.has(x)) v+=1; });
+      v += c.keys.reduce((a,k)=>a+sc(k),0)*0.15 + Math.random()*0.4;
+      if (v>bv){ bv=v; best=c; }
+    }
+    return best;
+  }
+  if (S.pick==='smart'){
+    const cands=[]; for (let i=0;i<30;i++) cands.push(genRaw());
+    const w=cands.map(c=>{ const v=c.keys.map(sc), mx=v.length?Math.max(...v):0;
+      return 0.04 + mx*mx + 0.08*v.reduce((a,b)=>a+b,0); });
+    let r=Math.random()*w.reduce((a,b)=>a+b,0);
+    for (let i=0;i<cands.length;i++){ r-=w[i]; if (r<=0) return cands[i]; }
+    return cands[0];
+  }
+  return genRaw();
+}
+
+/* ================= przebieg zadania ================= */
+let cur=null, phase='show', seqIdx=0, tStart=0, tries=0, rec=null, lastSec=null, flashTimer=null;
+
+function next(){
+  clearTimeout(flashTimer);
+  if (test && test.i>=test.n){ phase='testdone'; tStart=0; render(); return; }
+  cur=pickProblem();
+  if (test) cur.keys.forEach(k=>test.cats.push(keyCat(k)));
+  tries=0; rec=null; lastSec=null;
   if (S.autoClear) clearAbacus();
+  startShow();
+}
+function startShow(){
+  seqIdx = disp()==='flash' ? -1 : 0;
+  phase='show';
+  tStart = disp()==='flash' ? 0 : Date.now();
   render();
+}
+function reveal(){
+  lastSec = tStart ? Math.round((Date.now()-tStart)/100)/10 : null;
+  phase='reveal'; render(); setAbacus(cur.answer);
+}
+function judge(ok){
+  if (!rec){
+    rec = Object.assign({t:Date.now(), ok:ok?1:0, s:lastSec||0, k:cur.keys, r:1}, curLevel());
+    if (test) rec.x=1;
+    if (lastSec && lastSec<900) addRecord(rec); else rec.skip=1;
+    stats.all++;
+    if (ok){ stats.ok++; stats.streak++; stats.best=Math.max(stats.best,stats.streak); } else stats.streak=0;
+    save();
+    if (test) test.res.push({ok, s:lastSec, k:cur.keys});
+  } else if (!rec.skip){ rec.r++; saveHist(); pushDay(dayKey(rec.t)); }
+  if (ok){ if (test) test.i++; next(); }
+  else { tries++; clearAbacus(); startShow(); }
+}
+function startTest(){ focus=null; test={i:0, n:10, res:[], cats:[]}; openProg(false); next(); }
+function startFocus(keys){
+  const fam=keyFam(keys[0]);
+  keys = keys.filter(k => fam==='x' ? keyFam(k)==='x' : keyFam(k)!=='x');
+  if (fam==='x') S.mode='mul';
+  else {
+    const hp=keys.some(k=>keyFam(k)==='+'), hm=keys.some(k=>keyFam(k)==='-');
+    if (hp && hm) S.mode='mix';
+    else if (hp) S.mode = S.mode==='mix' ? 'mix' : 'add';
+    else S.mode = S.mode==='mix' ? 'mix' : 'sub';
+    if (keys.some(k=>k[0]==='c') && S.digits<2) S.digits=2;
+    if (S.terms<3) S.terms=3;
+  }
+  focus={keys, miss:false}; test=null; markSegs(); save(); openProg(false); next();
 }
 
 function render(){
   clearTimeout(flashTimer);
   $('metaBtn').textContent = levelName(curLevel())+'  ✎';
-  const D = disp();
-  const running = D!=='all' && !checked;
-  if (running && seqIdx>=terms.length && !tStart) tStart = Date.now();
+
+  // pasek trybu
+  const bn=$('banner');
+  if (focus){
+    const names=focus.keys.slice(0,3).map(shortName).join(', ');
+    bn.innerHTML='<span>🎯 Ćwiczysz: '+names+(focus.miss?'<br><small style="font-weight:600">Przy tych ustawieniach trudno o taki układ – dodaj cyfr lub liczb.</small>':'')+'</span><button id="bnX" aria-label="Zakończ">✕</button>';
+  } else if (test){
+    bn.innerHTML='<span>📝 Test: '+(phase==='testdone'?'koniec':'zadanie '+Math.min(test.i+1,test.n)+' z '+test.n)+'</span><button id="bnX" aria-label="Zakończ">✕</button>';
+  }
+  bn.classList.toggle('hidden', !focus && !test);
+  const bx=$('bnX'); if (bx) bx.onclick=()=>{ focus=null; test=null; next(); };
+
+  const D=disp();
+  const running = phase==='show' && D!=='all';
+  if (running && seqIdx>=cur.terms.length && !tStart) tStart=Date.now();
   let html='';
-  if (running && seqIdx < 0){
-    html += '<div class="sub" style="font-size:17px">Liczby pojawią się same, jedna po drugiej</div>';
-    html += '<button class="inbtn" id="startBtn">▶ Start</button>';
-  } else if (running && seqIdx < terms.length){
-    const t=terms[seqIdx];
-    const len = String(t.v).length + (seqIdx>0?1:0);
-    html += '<div class="big"'+(len>5?' style="font-size:'+Math.round(380/len)+'px"':'')+'>'+(seqIdx>0?'<span class="op">'+sym(t.op)+'</span>':'')+t.v+'</div>';
-    html += '<div class="sub">'+(seqIdx+1)+' / '+terms.length+'</div>';
-    if (D==='seq') html += '<button class="inbtn" id="nextTerm">'+(seqIdx<terms.length-1?'Dalej ›':'Koniec ›')+'</button>';
+
+  if (phase==='testdone'){
+    const okN=test.res.filter(r=>r.ok).length, ts=test.res.filter(r=>r.ok&&r.s).map(r=>r.s);
+    const bad={}; test.res.filter(r=>!r.ok).forEach(r=>r.k.forEach(k=>{ bad[k]=(bad[k]||0)+1; }));
+    const top=Object.keys(bad).sort((a,b)=>bad[b]-bad[a]).slice(0,4);
+    html+='<div class="score">'+okN+'/'+test.n+'</div><div class="sub">dobrze za pierwszym razem · średni czas '+(ts.length?fmtT(ts.reduce((a,b)=>a+b,0)/ts.length):'–')+'</div>';
+    if (top.length){
+      html+='<div class="ask" style="margin-top:14px">Do poćwiczenia:</div><div class="chips">'+top.map(k=>'<span class="chip">'+shortName(k)+'</span>').join('')+'</div>';
+      html+='<button class="inbtn" id="testFocus">🎯 Ćwicz te układy</button>';
+      test.top=top;
+    } else html+='<div class="feedback ok">Bez błędów! 🎉</div>';
+  } else if (running && seqIdx<0){
+    html+='<div class="sub" style="font-size:17px">Liczby pojawią się same, jedna po drugiej</div><button class="inbtn" id="startBtn">▶ Start</button>';
+  } else if (running && seqIdx<cur.terms.length){
+    const t=cur.terms[seqIdx], len=String(t.v).length+(seqIdx>0?1:0);
+    html+='<div class="big"'+(len>5?' style="font-size:'+Math.round(380/len)+'px"':'')+'>'+(seqIdx>0?'<span class="op">'+sym(t.op)+'</span>':'')+t.v+'</div>';
+    html+='<div class="sub">'+(seqIdx+1)+' / '+cur.terms.length+'</div>';
+    if (D==='seq') html+='<button class="inbtn" id="nextTerm">'+(seqIdx<cur.terms.length-1?'Dalej ›':'Koniec ›')+'</button>';
   } else if (running){
-    html += '<div class="big" style="color:#cdbfae">= ?</div><div class="sub">Ustaw wynik na liczydle</div>';
+    html+='<div class="big" style="color:#cdbfae">= ?</div><div class="sub">Policz na sorobanie i naciśnij „Pokaż wynik”</div>';
   } else {
-    html += '<div class="terms">';
-    terms.forEach((t,i)=>{
-      html += '<div class="row"><span class="op">'+(i>0?sym(t.op):'')+'</span><span>'+t.v+'</span></div>';
-    });
-    html += '<div class="row res"><span class="op">=</span><span class="'+(checked?'a':'q')+'">'+(checked?answer:'?')+'</span></div></div>';
+    const rev=phase==='reveal';
+    html+='<div class="terms">';
+    cur.terms.forEach((t,i)=>{ html+='<div class="row"><span class="op">'+(i>0?sym(t.op):'')+'</span><span>'+t.v+'</span></div>'; });
+    html+='<div class="row res"><span class="op">=</span><span class="'+(rev?'a':'q')+'">'+(rev?cur.answer:'?')+'</span></div></div>';
+    if (rev) html+='<div class="ask">Wyszło Ci tyle na sorobanie?</div>';
   }
-  if (checked){
-    if (lastOk===true)  html += '<div class="feedback ok">Świetnie! Dobrze ✓</div>';
-    if (lastOk===false) html += '<div class="feedback bad">Ustawiłeś '+userVal+', a wynik to '+answer+'</div>';
-    if (lastOk===null)  html += '<div class="feedback info">Wynik: '+answer+'</div>';
-  }
-  $('pbody').innerHTML = html;
+  if (phase==='show' && tries>0) html+='<div class="feedback info">Jeszcze raz 💪 próba '+(tries+1)+'</div>';
+  $('pbody').innerHTML=html;
 
   const sb=$('startBtn'); if (sb) sb.onclick=()=>{ seqIdx=0; render(); };
   const nb=$('nextTerm'); if (nb) nb.onclick=()=>{ seqIdx++; render(); };
-  if (running && D==='flash' && seqIdx>=0 && seqIdx<terms.length)
-    flashTimer = setTimeout(()=>{ seqIdx++; render(); }, S.speed);
+  const tf=$('testFocus'); if (tf) tf.onclick=()=>startFocus(test.top);
+  if (running && D==='flash' && seqIdx>=0 && seqIdx<cur.terms.length)
+    flashTimer=setTimeout(()=>{ seqIdx++; render(); }, S.speed);
 
-  const cb=$('checkBtn');
-  cb.textContent = checked ? 'Następne ›' : 'Sprawdź';
-  cb.classList.toggle('next', checked);
-  cb.disabled = running && seqIdx < terms.length;
+  // przyciski
+  const a=$('actions');
+  if (phase==='testdone'){
+    a.innerHTML='<button class="btn sec" id="aEnd">Zakończ</button><button class="btn pri" id="aAgain">Nowy test</button>';
+    $('aEnd').onclick=()=>{ test=null; next(); };
+    $('aAgain').onclick=startTest;
+  } else if (phase==='reveal'){
+    a.innerHTML='<button class="btn bad" id="aBad">✗ Źle</button><button class="btn good" id="aOk">✓ Dobrze</button>';
+    $('aBad').onclick=()=>judge(false);
+    $('aOk').onclick=()=>judge(true);
+  } else {
+    a.innerHTML=(S.showAbacus?'<button class="btn sec" id="aClr">Wyczyść</button>':'')+'<button class="btn pri" id="aShow">Pokaż wynik</button>';
+    const c=$('aClr'); if (c) c.onclick=()=>{ if (value()) clack(); clearAbacus(); };
+    const sh=$('aShow'); sh.onclick=reveal; sh.disabled = running && seqIdx<cur.terms.length;
+  }
   renderStats();
 }
 function renderStats(){
-  $('stStreak').textContent = stats.streak;
-  $('stOk').textContent = stats.ok+'/'+stats.all;
-  $('stBest').textContent = stats.best;
+  $('stStreak').textContent=stats.streak;
+  $('stOk').textContent=stats.ok+'/'+stats.all;
+  $('stBest').textContent=stats.best;
+}
+function tick(){
+  const el=$('timer');
+  if (phase==='testdone'){ el.textContent=''; return; }
+  if (phase==='reveal'){ el.textContent = lastSec!=null ? '⏱ '+fmtT(lastSec) : ''; return; }
+  el.textContent = tStart ? '⏱ '+Math.floor((Date.now()-tStart)/1000)+' s' : '';
 }
 
-$('checkBtn').onclick = ()=>{
-  if (checked){ gen(); return; }
-  userVal = value();
-  if (userVal===0) lastOk = null;
-  else {
-    lastOk = userVal===answer; stats.all++;
-    if (tStart){
-      const sec = Math.round((Date.now()-tStart)/100)/10;
-      if (sec>0 && sec<900) addRecord(Object.assign({t:Date.now(), ok:lastOk?1:0, s:sec}, curLevel()));
-    }
-    if (lastOk){ stats.ok++; stats.streak++; stats.best=Math.max(stats.best,stats.streak); }
-    else stats.streak=0;
-  }
-  checked=true; save(); render(); setAbacus(answer);
-};
-$('clearBtn').onclick = ()=>{ if (value()) clack(); clearAbacus(); };
-
-/* ---------- ustawienia ---------- */
+/* ================= ustawienia ================= */
 function openSheet(o){ $('sheet').classList.toggle('show',o); $('overlay').classList.toggle('show',o); }
-$('gear').onclick = ()=>openSheet(true);
-$('metaBtn').onclick = ()=>openSheet(true);
-$('overlay').onclick = ()=>openSheet(false);
-$('doneBtn').onclick = ()=>openSheet(false);
-
+$('gear').onclick=()=>openSheet(true);
+$('metaBtn').onclick=()=>openSheet(true);
+$('doneBtn').onclick=()=>openSheet(false);
+function applyVis(){ $('abWrap').classList.toggle('hidden', !S.showAbacus); }
 function markSegs(){
   document.querySelectorAll('.seg[data-key]').forEach(seg=>{
     const key=seg.dataset.key;
     seg.querySelectorAll('button').forEach(b=>b.classList.toggle('sel', String(S[key])===b.dataset.val));
   });
-  const mul = S.mode==='mul';
-  $('speedSet').classList.toggle('hidden', S.display!=='flash' || mul);
+  const mul=S.mode==='mul';
+  $('speedSet').classList.toggle('hidden', S.display!=='flash'||mul);
   $('mdigSet').classList.toggle('hidden', !mul);
   $('termsSet').classList.toggle('hidden', mul);
   $('dispSet').classList.toggle('hidden', mul);
@@ -445,79 +669,47 @@ function markSegs(){
 document.querySelectorAll('.seg[data-key]').forEach(seg=>{
   const key=seg.dataset.key;
   seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
-    S[key] = isNaN(+b.dataset.val) ? b.dataset.val : +b.dataset.val;
+    S[key]=isNaN(+b.dataset.val)?b.dataset.val:+b.dataset.val;
+    if (key==='mode') focus=null;
     markSegs(); save();
-    if (key!=='speed' && !(key==='mdig' && S.mode!=='mul')) gen();
+    if (key!=='speed' && key!=='pick' && !(key==='mdig'&&S.mode!=='mul')) next();
   });
 });
 document.querySelectorAll('[data-opt]').forEach(inp=>{
   const k=inp.dataset.opt; inp.checked=!!S[k];
-  inp.onchange=()=>{ S[k]=inp.checked; save(); draw(); };
+  inp.onchange=()=>{ S[k]=inp.checked; save(); draw(); applyVis(); render(); };
 });
-$('resetStats').onclick = ()=>{
+$('resetStats').onclick=()=>{
   const b=$('resetStats');
-  if (b.dataset.c){ stats={ok:0,all:0,streak:0,best:0}; save(); renderStats(); b.textContent='Zeruj wyniki'; delete b.dataset.c; }
-  else { b.dataset.c='1'; b.textContent='Na pewno?'; setTimeout(()=>{ if(b.dataset.c){ delete b.dataset.c; b.textContent='Zeruj wyniki'; } },3000); }
+  if (b.dataset.c){ stats={ok:0,all:0,streak:0,best:0}; save(); renderStats(); b.textContent='Zeruj licznik'; delete b.dataset.c; }
+  else { b.dataset.c='1'; b.textContent='Na pewno?'; setTimeout(()=>{ if (b.dataset.c){ delete b.dataset.c; b.textContent='Zeruj licznik'; } },3000); }
 };
 
-/* ---------- poziom ---------- */
-function curLevel(){
-  return S.mode==='mul' ? {m:'mul', d:S.digits, n:S.mdig, f:0}
-                        : {m:S.mode, d:S.digits, n:S.terms, f:S.display==='flash'?1:0};
-}
-const lkey = r => r.m+'|'+r.d+'|'+r.n+'|'+(r.f?1:0);
-const cyf = n => n+' '+pl(n,'cyfra','cyfry','cyfr');
-function levelName(L){
-  if (L.m==='mul') return cyf(L.d)+' × '+cyf(L.n);
-  const mn={add:'dodawanie',sub:'odejmowanie',mix:'mieszane'}[L.m];
-  return cyf(L.d)+' · '+L.n+' '+pl(L.n,'liczba','liczby','liczb')+' · '+mn+(L.f?' · błysk':'');
-}
-function fmtT(s){
-  if (s==null) return '–';
-  return s<60 ? s.toFixed(1).replace('.',',')+' s' : Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0')+' min';
-}
-
-/* ---------- stoper ---------- */
-let lastSec=null;
-function tick(){
-  const el=$('timer');
-  if (checked){ el.textContent = lastSec!=null ? '⏱ '+fmtT(lastSec) : ''; return; }
-  el.textContent = tStart ? '⏱ '+Math.floor((Date.now()-tStart)/1000)+' s' : '';
-}
-
-/* ---------- historia ---------- */
-let hist=[];
-try{ hist = JSON.parse(localStorage.getItem('soroban_hist')||'[]'); }catch(e){}
-if (!Array.isArray(hist)) hist=[];
-function saveHist(){ try{ localStorage.setItem('soroban_hist', JSON.stringify(hist.slice(-20000))); }catch(e){} }
-const dayKey = t => { const d=new Date(t); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'); };
-function addRecord(rec){ lastSec=rec.s; hist.push(rec); saveHist(); pushDay(dayKey(rec.t)); }
-
-/* ---------- zapis na koncie (gdy dostępny) ---------- */
+/* ================= zapis na koncie (gdy dostępny) ================= */
 let cloud=null, cloudState='local';
 const writing={}, dirty={};
-const withTimeout = (p,ms) => Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
+const withTimeout=(p,ms)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
 async function initCloud(){
   renderSync();
   try{
     if (!window.claude || typeof window.claude.use!=='function') return;
-    const [db,user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
-    if (!db || !user) return;
-    const uid = await user.id(); if (!uid) return;
-    cloud = db.collection('data/users/'+uid);
+    const [db,user]=await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db||!user) return;
+    const uid=await user.id(); if (!uid) return;
+    cloud=db.collection('data/users/'+uid);
     cloudState='loading'; renderSync();
-    const snap = await withTimeout(cloud.get(), 10000);
-    const have = new Set(hist.map(r=>r.t)), cloudDays = {};
+    const snap=await withTimeout(cloud.get(),10000);
+    const have=new Set(hist.map(r=>r.t)), cloudDays={};
     snap.docs.forEach(doc=>{
-      if (!doc.exists || doc.id[0]!=='d') return;
-      const items = (doc.data()||{}).items || [];
-      cloudDays[doc.id.slice(1)] = new Set(items.map(r=>r.t));
-      items.forEach(r=>{ if (r && typeof r.t==='number' && !have.has(r.t)){ hist.push(Object.assign({},r)); have.add(r.t); } });
+      if (!doc.exists||doc.id[0]!=='d') return;
+      const items=(doc.data()||{}).items||[];
+      cloudDays[doc.id.slice(1)]=new Set(items.map(r=>r.t));
+      items.forEach(r=>{ if (r&&typeof r.t==='number'&&!have.has(r.t)){ hist.push(Object.assign({},r)); have.add(r.t); } });
     });
     hist.sort((a,b)=>a.t-b.t); saveHist();
-    cloudState='ok'; renderSync(); renderProgressIfOpen();
-    const missing = {};
-    hist.forEach(r=>{ const k=dayKey(r.t); if (!cloudDays[k] || !cloudDays[k].has(r.t)) missing[k]=1; });
+    cloudState='ok'; renderSync(); renderSheetIfOpen();
+    const missing={};
+    hist.forEach(r=>{ const k=dayKey(r.t); if (!cloudDays[k]||!cloudDays[k].has(r.t)) missing[k]=1; });
     for (const k of Object.keys(missing)) await pushDay(k);
   }catch(e){ cloudState='err'; renderSync(); }
 }
@@ -526,10 +718,7 @@ async function pushDay(k){
   if (writing[k]){ dirty[k]=1; return; }
   writing[k]=1;
   try{
-    do{
-      dirty[k]=0;
-      await cloud.doc('d'+k).set({items: hist.filter(r=>dayKey(r.t)===k)});
-    } while (dirty[k]);
+    do { dirty[k]=0; await cloud.doc('d'+k).set({items:hist.filter(r=>dayKey(r.t)===k)}); } while (dirty[k]);
     cloudState='ok';
   }catch(e){ cloudState='err'; }
   writing[k]=0; renderSync();
@@ -542,59 +731,71 @@ function renderSync(){
     : '📱 Wyniki zapisują się w tym telefonie';
 }
 
-/* ---------- ekran postępu ---------- */
-let pf='level';
+/* ================= arkusz: postęp + trudne układy ================= */
+let pf='level', ptab='prog';
 const DAY=864e5, WD=['nd','pn','wt','śr','cz','pt','sb'];
-function openProg(o){ $('psheet').classList.toggle('show',o); $('overlay').classList.toggle('show',o); if (o) renderProgress(); }
-function renderProgressIfOpen(){ if ($('psheet').classList.contains('show')) renderProgress(); }
+function openProg(o, tab){
+  if (tab) ptab=tab;
+  $('psheet').classList.toggle('show',o); $('overlay').classList.toggle('show',o);
+  if (o){ $('psheet').scrollTop=0; renderSheet(); }
+}
+function renderSheetIfOpen(){ if ($('psheet').classList.contains('show')) renderSheet(); }
+function renderSheet(){
+  document.querySelectorAll('#ptabs button').forEach(b=>b.classList.toggle('sel', b.dataset.tab===ptab));
+  $('pfilter').classList.toggle('hidden', ptab!=='prog');
+  ptab==='prog' ? renderProgress() : renderKeys();
+}
+$('progBtn').onclick=()=>openProg(true,'prog');
+$('keysBtn').onclick=()=>openProg(true,'keys');
+$('pDone').onclick=()=>openProg(false);
+$('overlay').onclick=()=>{ openSheet(false); openProg(false); };
+document.querySelectorAll('#ptabs button').forEach(b=>b.onclick=()=>{ ptab=b.dataset.tab; $('psheet').scrollTop=0; renderSheet(); });
+document.querySelectorAll('button[data-pf]').forEach(b=>b.onclick=()=>{
+  pf=b.dataset.pf;
+  document.querySelectorAll('button[data-pf]').forEach(x=>x.classList.toggle('sel',x===b));
+  renderProgress();
+});
+
 function summ(list){
-  const okL = list.filter(r=>r.ok);
-  return { n:list.length, acc: list.length ? okL.length/list.length*100 : null,
-           t: okL.length ? okL.reduce((a,r)=>a+r.s,0)/okL.length : null };
+  const okL=list.filter(r=>r.ok), tL=okL.filter(r=>r.s);
+  return { n:list.length, acc:list.length?okL.length/list.length*100:null,
+           t:tL.length?tL.reduce((a,r)=>a+r.s,0)/tL.length:null };
 }
 function dcell(va,vb,kind){
-  if (va==null || vb==null) return '<td class="d same">–</td>';
-  const d = va-vb;
-  if (Math.abs(d) < (kind==='t'?0.05:0.5)) return '<td class="d same">bez zmian</td>';
-  const good = kind==='t' ? d<0 : d>0;
-  const sg = d>0 ? '+' : '−';
-  const txt = kind==='n' ? sg+Math.abs(d) : kind==='a' ? sg+Math.round(Math.abs(d))+' pkt' : sg+Math.abs(d).toFixed(1).replace('.',',')+' s';
+  if (va==null||vb==null) return '<td class="d same">–</td>';
+  const d=va-vb;
+  if (Math.abs(d)<(kind==='t'?0.05:0.5)) return '<td class="d same">bez zmian</td>';
+  const good=kind==='t'?d<0:d>0, sg=d>0?'+':'−';
+  const txt=kind==='n'?sg+Math.abs(d):kind==='a'?sg+Math.round(Math.abs(d))+' pkt':sg+Math.abs(d).toFixed(1).replace('.',',')+' s';
   return '<td class="d '+(good?'up':'down')+'">'+(good?'▲ ':'▼ ')+txt+'</td>';
 }
-const pct = v => v==null ? '–' : Math.round(v)+'%';
+const pct=v=>v==null?'–':Math.round(v)+'%';
 function verdict(a,b){
-  if (a.n<3 || b.n<3)
+  if (a.n<3||b.n<3)
     return '<span class="em">📊</span>Za mało danych do porównania. Potrzeba co najmniej 3 zadań '+(pf==='level'?'na tym poziomie ':'')+
       'w ostatnich 7 dniach i 3 zadań w tygodniu wcześniej.'+(b.n<3?' Ćwicz dalej – za tydzień zobaczysz tu, czy jesteś lepszy.':'');
   const parts=[]; let score=0;
-  if (a.t!=null && b.t!=null){
-    const f=(b.t-a.t)/b.t*100;
-    if (f>=3){ parts.push('szybszy o '+Math.round(f)+'%'); score++; }
-    else if (f<=-3){ parts.push('wolniejszy o '+Math.round(-f)+'%'); score--; }
-  }
+  if (a.t!=null&&b.t!=null){ const f=(b.t-a.t)/b.t*100;
+    if (f>=3){ parts.push('szybszy o '+Math.round(f)+'%'); score++; } else if (f<=-3){ parts.push('wolniejszy o '+Math.round(-f)+'%'); score--; } }
   const ad=a.acc-b.acc;
-  if (ad>=3){ parts.push('dokładniejszy o '+Math.round(ad)+' pkt %'); score++; }
-  else if (ad<=-3){ parts.push('mniej dokładny o '+Math.round(-ad)+' pkt %'); score--; }
+  if (ad>=3){ parts.push('dokładniejszy o '+Math.round(ad)+' pkt %'); score++; } else if (ad<=-3){ parts.push('mniej dokładny o '+Math.round(-ad)+' pkt %'); score--; }
   if (!parts.length) return '<span class="em">➖</span>Jesteś na podobnym poziomie co tydzień temu.';
-  const head = score>0 ? 'Jesteś lepszy niż tydzień temu!' : score<0 ? 'Ten tydzień trochę słabszy – nie odpuszczaj!' : 'Wynik mieszany.';
+  const head=score>0?'Jesteś lepszy niż tydzień temu!':score<0?'Ten tydzień trochę słabszy – nie odpuszczaj!':'Wynik mieszany.';
   return '<span class="em">'+(score>0?'🎉':score<0?'💪':'⚖️')+'</span>'+head+' Jesteś '+parts.join(' i ')+'.';
 }
-function barChart(days, key, color, fmt){
-  const W=340, H=136, pb=18, pt=10, GL=34, bw=(W-GL)/days.length;
-  const vals = days.map(d=>d[key]).filter(v=>v!=null);
-  const max = key==='acc' ? 100 : Math.max(1, ...vals)*1.1;
-  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img">';
-  let lab='';
+function barChart(days,key,color,fmt){
+  const W=340,H=136,pb=18,pt=10,GL=34,bw=(W-GL)/days.length;
+  const vals=days.map(d=>d[key]).filter(v=>v!=null);
+  const max=key==='acc'?100:Math.max(1,...vals)*1.1;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img">', lab='';
   [0.5,1].forEach(g=>{ const y=H-pb-(H-pb-pt)*g;
     s+='<line x1="'+GL+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="#f0e8dc" stroke-width="1"/>';
     lab+='<text x="'+(GL-5)+'" y="'+(y+3.5)+'" font-size="10" text-anchor="end" fill="#8f8072">'+fmt(max*g)+'</text>'; });
   s+='<line x1="'+GL+'" x2="'+W+'" y1="'+(H-pb)+'" y2="'+(H-pb)+'" stroke="#d9cdbd" stroke-width="1"/>';
   days.forEach((d,i)=>{
     const v=d[key], x=GL+i*bw;
-    if (v!=null){
-      const h=Math.max(3,(H-pb-pt)*v/max);
-      s+='<path d="M'+(x+4)+','+(H-pb)+'V'+(H-pb-h+4)+'q0,-4 4,-4h'+(bw-16)+'q4,0 4,4V'+(H-pb)+'Z" fill="'+color+'"/>';
-    }
+    if (v!=null){ const h=Math.max(3,(H-pb-pt)*v/max);
+      s+='<path d="M'+(x+4)+','+(H-pb)+'V'+(H-pb-h+4)+'q0,-4 4,-4h'+(bw-16)+'q4,0 4,4V'+(H-pb)+'Z" fill="'+color+'"/>'; }
     s+='<rect class="bar" data-i="'+i+'" x="'+x+'" y="0" width="'+bw+'" height="'+H+'" fill="transparent"/>';
     if ((days.length-1-i)%2===0)
       s+='<text x="'+(x+bw/2)+'" y="'+(H-4)+'" font-size="10" text-anchor="middle" fill="#8f8072">'+(i===days.length-1?'dziś':d.date.getDate())+'</text>';
@@ -603,57 +804,70 @@ function barChart(days, key, color, fmt){
 }
 function renderProgress(){
   const L=curLevel(), K=lkey(L);
-  const list = pf==='level' ? hist.filter(r=>lkey(r)===K) : hist;
+  const list=pf==='level'?hist.filter(r=>lkey(r)===K):hist;
   const now=Date.now();
-  const a=summ(list.filter(r=>r.t>now-7*DAY)), b=summ(list.filter(r=>r.t<=now-7*DAY && r.t>now-14*DAY));
-  let h = '<div class="sub" style="text-align:center;margin:-2px 0 10px">'+
-    (pf==='level' ? 'Poziom: <b>'+levelName(L)+'</b>' : 'Czas najlepiej porównywać na jednym poziomie')+'</div>';
+  const a=summ(list.filter(r=>r.t>now-7*DAY)), b=summ(list.filter(r=>r.t<=now-7*DAY&&r.t>now-14*DAY));
+  let h='<div class="sub" style="text-align:center;margin:-2px 0 10px">'+(pf==='level'?'Poziom: <b>'+levelName(L)+'</b>':'Czas najlepiej porównywać na jednym poziomie')+'</div>';
   if (!list.length){
-    $('progBody').innerHTML = h+'<div class="verdict"><span class="em">🧮</span>Brak rozwiązanych zadań'+(pf==='level'?' na tym poziomie':'')+
-      '. Rozwiąż kilka (ustaw wynik na liczydle i naciśnij „Sprawdź”), a tu pojawią się Twoje wyniki.</div>';
+    $('progBody').innerHTML=h+'<div class="verdict"><span class="em">🧮</span>Brak zadań'+(pf==='level'?' na tym poziomie':'')+'. Licz na sorobanie, naciskaj „Pokaż wynik” i oceniaj – tu pojawią się Twoje wyniki.</div>';
     return;
   }
-  h += '<div class="verdict">'+verdict(a,b)+'</div>';
-  h += '<div class="cmp"><table><tr><th></th><th>Tydzień<br>wcześniej</th><th>Ostatnie<br>7 dni</th><th>Zmiana</th></tr>'+
+  h+='<div class="verdict">'+verdict(a,b)+'</div>';
+  h+='<div class="cmp"><table><tr><th></th><th>Tydzień<br>wcześniej</th><th>Ostatnie<br>7 dni</th><th>Zmiana</th></tr>'+
     '<tr><td>Zadania</td><td>'+b.n+'</td><td>'+a.n+'</td>'+dcell(a.n,b.n,'n')+'</tr>'+
-    '<tr><td>Skuteczność</td><td>'+pct(b.acc)+'</td><td>'+pct(a.acc)+'</td>'+dcell(a.acc,b.acc,'a')+'</tr>'+
+    '<tr><td>Dobrze*</td><td>'+pct(b.acc)+'</td><td>'+pct(a.acc)+'</td>'+dcell(a.acc,b.acc,'a')+'</tr>'+
     '<tr><td>Średni czas*</td><td>'+fmtT(b.t)+'</td><td>'+fmtT(a.t)+'</td>'+dcell(a.t,b.t,'t')+'</tr></table></div>';
-  const all=summ(list), okT=list.filter(r=>r.ok).map(r=>r.s);
-  h += '<div class="tot"><div><b>'+all.n+'</b><small>wszystkich zadań</small></div><div><b>'+pct(all.acc)+'</b><small>skuteczność</small></div>'+
-       '<div><b>'+(okT.length?fmtT(Math.min(...okT)):'–')+'</b><small>najlepszy czas</small></div></div>';
-  const start = new Date(); start.setHours(0,0,0,0);
-  const days=[];
+  const all=summ(list), okT=list.filter(r=>r.ok&&r.s).map(r=>r.s);
+  h+='<div class="tot"><div><b>'+all.n+'</b><small>wszystkich zadań</small></div><div><b>'+pct(all.acc)+'</b><small>dobrze*</small></div>'+
+     '<div><b>'+(okT.length?fmtT(Math.min(...okT)):'–')+'</b><small>najlepszy czas</small></div></div>';
+  const start=new Date(); start.setHours(0,0,0,0); const days=[];
   for (let i=13;i>=0;i--){
-    const d0 = new Date(start); d0.setDate(start.getDate()-i);
-    const d1 = new Date(d0); d1.setDate(d0.getDate()+1);
-    days.push(Object.assign({date:d0}, summ(list.filter(r=>r.t>=d0.getTime() && r.t<d1.getTime()))));
+    const d0=new Date(start); d0.setDate(start.getDate()-i); const d1=new Date(d0); d1.setDate(d0.getDate()+1);
+    days.push(Object.assign({date:d0}, summ(list.filter(r=>r.t>=d0.getTime()&&r.t<d1.getTime()))));
   }
-  h += '<div class="chart" data-k="t"><h3>Średni czas na zadanie*</h3><div class="cs">Niżej = szybciej. Dotknij słupka, żeby zobaczyć dzień.</div>'+
-       barChart(days,'t','#e4572e',v=>Math.round(v)+' s')+'</div>';
-  h += '<div class="chart" data-k="acc"><h3>Skuteczność</h3><div class="cs">Odsetek dobrze rozwiązanych zadań.</div>'+
-       barChart(days,'acc','#1f9d57',v=>Math.round(v)+'%')+'</div>';
-  h += '<div class="help">* Czas liczony od pokazania zadania do naciśnięcia „Sprawdź”, tylko dla dobrych odpowiedzi. '+
-       'W trybie „Błysk” – od zniknięcia ostatniej liczby.</div>';
-  $('progBody').innerHTML = h;
+  h+='<div class="chart" data-k="t"><h3>Średni czas na zadanie*</h3><div class="cs">Niżej = szybciej. Dotknij słupka, żeby zobaczyć dzień.</div>'+barChart(days,'t','#e4572e',v=>Math.round(v)+' s')+'</div>';
+  h+='<div class="chart" data-k="acc"><h3>Dobrze za pierwszym razem</h3><div class="cs">Odsetek zadań ocenionych „Dobrze” w pierwszej próbie.</div>'+barChart(days,'acc','#1f9d57',v=>Math.round(v)+'%')+'</div>';
+  h+='<div class="help">* Liczy się pierwsza próba. Czas – od pokazania zadania do „Pokaż wynik”, tylko dla dobrych odpowiedzi; w trybie „Błysk” od zniknięcia ostatniej liczby.</div>';
+  $('progBody').innerHTML=h;
   document.querySelectorAll('#progBody .chart').forEach(ch=>{
     const k=ch.dataset.k;
     ch.querySelectorAll('rect.bar').forEach(r=>r.onclick=()=>{
       const d=days[+r.dataset.i];
-      const lab = WD[d.date.getDay()]+' '+d.date.getDate()+'.'+String(d.date.getMonth()+1).padStart(2,'0');
-      ch.querySelector('.cs').innerHTML = '<b>'+lab+'</b>: '+(d.n ? (k==='t'?fmtT(d.t):pct(d.acc))+' · '+d.n+' '+pl(d.n,'zadanie','zadania','zadań') : 'brak ćwiczeń');
+      const lab=WD[d.date.getDay()]+' '+d.date.getDate()+'.'+String(d.date.getMonth()+1).padStart(2,'0');
+      ch.querySelector('.cs').innerHTML='<b>'+lab+'</b>: '+(d.n?(k==='t'?fmtT(d.t):pct(d.acc))+' · '+d.n+' '+pl(d.n,'zadanie','zadania','zadań'):'brak ćwiczeń');
     });
   });
 }
-$('progBtn').onclick = ()=>openProg(true);
-$('pDone').onclick = ()=>openProg(false);
-$('overlay').onclick = ()=>{ openSheet(false); openProg(false); };
-document.querySelectorAll('button[data-pf]').forEach(b=>b.onclick=()=>{
-  pf=b.dataset.pf;
-  document.querySelectorAll('button[data-pf]').forEach(x=>x.classList.toggle('sel', x===b));
-  renderProgress();
-});
+function keyRow(k, st){
+  const o=st[k];
+  const lvl=!o||o.seen<3?'':o.score>0.45?'hard':o.score>0.25?'mid':'lo';
+  let info='jeszcze nie ćwiczone';
+  if (o){ info=o.seen+'× · błędy '+Math.round(o.rate*100)+'%'; if (o.ns>=2&&o.sl>1.15) info+=' · wolniej o '+Math.round((o.sl-1)*100)+'%'; }
+  return '<div class="krow"><div class="kf">'+keyName(k)+'<small>'+info+'</small></div><span class="kdot '+lvl+'"></span><button class="kbtn" data-k="'+k+'">Ćwicz</button></div>';
+}
+function weakKeys(){
+  const st=keyStats();
+  return Object.keys(st).filter(k=>st[k].seen>=3).sort((a,b)=>st[b].score-st[a].score);
+}
+function renderKeys(){
+  const st=keyStats(), weak=weakKeys().slice(0,5);
+  let h='<div class="verdict info"><span class="em">🧮</span>Na sorobanie są układy trudniejsze od innych: gdy nie da się po prostu dosunąć koralików, trzeba użyć piątki albo dziesiątki. Ćwiczy się je po kolei, aż wejdą w automat – to kwestia powtórzeń. Apka zapamiętuje, przy których układach się mylisz lub zwalniasz.</div>';
+  h+='<div class="kbig"><button class="btn t1" id="kTest">📝 Test – 10 zadań</button><button class="btn t2" id="kWeak"'+(weak.length?'':' disabled')+'>🎯 Ćwicz najsłabsze</button></div>';
+  h+='<h3 class="kh">Twoje najtrudniejsze</h3>';
+  h+= weak.length ? '<div class="klist">'+weak.map(k=>keyRow(k,st)).join('')+'</div>'
+                  : '<div class="help">Rozwiąż około 30 zadań (oceniając „Dobrze” / „Źle”), a apka pokaże tu układy, przy których najczęściej się mylisz albo zwalniasz.</div>';
+  h+='<h3 class="kh">Wszystkie układy</h3>';
+  GROUPS.forEach(g=>{
+    const done=g.keys.filter(k=>st[k]).length;
+    h+='<details class="kg"><summary>'+g.name+'<small>'+done+'/'+g.keys.length+'</small></summary><div class="gd">'+g.d+'</div><div class="klist">'+g.keys.map(k=>keyRow(k,st)).join('')+'</div></details>';
+  });
+  $('progBody').innerHTML=h;
+  $('kTest').onclick=startTest;
+  $('kWeak').onclick=()=>{ const w=weakKeys(); if (w.length) startFocus(w.slice(0,3)); };
+  document.querySelectorAll('#progBody .kbtn').forEach(b=>b.onclick=()=>startFocus([b.dataset.k]));
+}
 
-markSegs(); draw(); gen(); setInterval(tick, 250); initCloud();
+markSegs(); applyVis(); draw(); next(); setInterval(tick,250); initCloud();
 if ('serviceWorker' in navigator && location.protocol==='https:') { try { navigator.serviceWorker.register('sw.js'); } catch(e){} }
 </script>
 </body>
