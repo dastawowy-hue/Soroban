@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Soroban">
+<meta name="theme-color" content="#f5efe6">
+<title>Soroban – trening</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<style>
+:root{
+  --bg:#f5efe6; --card:#ffffff; --ink:#2a1f17; --mut:#8f8072; --line:#ece2d3;
+  --acc:#e4572e; --acc2:#ff8a4c; --ok:#1f9d57; --bad:#e5484d;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:ui-rounded,"SF Pro Rounded",-apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+.app{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:10px;
+  padding:calc(env(safe-area-inset-top) + 12px) 14px calc(env(safe-area-inset-bottom) + 22px)}
+button{font:inherit;cursor:pointer;color:inherit}
+
+/* góra */
+header{display:flex;align-items:center;justify-content:space-between}
+h1{margin:0;font-size:26px;font-weight:800;letter-spacing:-.3px}
+h1 span{color:var(--acc)}
+.iconbtn{width:42px;height:42px;border-radius:50%;border:0;background:var(--card);
+  box-shadow:0 2px 8px rgba(60,35,10,.1);font-size:20px;display:grid;place-items:center}
+.pills{display:flex;gap:8px}
+.pill{flex:1;background:var(--card);border-radius:14px;padding:5px 8px;display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;
+  box-shadow:0 2px 8px rgba(60,35,10,.06)}
+.pill b{font-size:17px;font-variant-numeric:tabular-nums}
+.pill small{font-size:15px}
+
+/* przełączniki */
+.seg{display:flex;background:#ebe2d5;border-radius:14px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:transparent;padding:8px 4px;border-radius:11px;
+  font-size:15px;font-weight:600;color:#6d5f52}
+.seg button.sel{background:var(--card);color:var(--acc);box-shadow:0 2px 6px rgba(60,35,10,.12)}
+
+/* zadanie */
+.card{background:var(--card);border-radius:22px;box-shadow:0 6px 22px rgba(60,35,10,.08)}
+.problem{min-height:178px;padding:10px 16px 14px;display:flex;flex-direction:column;align-items:center}
+.meta{align-self:stretch;display:flex;justify-content:center}
+.meta button{border:0;background:#f6efe5;color:var(--mut);font-size:13px;font-weight:600;
+  border-radius:20px;padding:6px 12px}
+.pbody{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding-top:8px}
+.terms{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.18;min-width:55%}
+.terms .row{display:flex;justify-content:space-between;align-items:baseline;gap:18px}
+.terms .op{color:var(--acc);font-weight:700}
+.terms .res{border-top:3px solid var(--ink);margin-top:6px;padding-top:4px}
+.terms .q{color:#cdbfae}
+.terms .a{color:var(--ok)}
+.big{font-size:76px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1;animation:pop .22s ease-out}
+.big .op{color:var(--acc);margin-right:8px}
+@keyframes pop{from{transform:scale(.7);opacity:0}to{transform:scale(1);opacity:1}}
+.sub{color:var(--mut);font-size:14px;font-weight:600;margin-top:10px}
+.feedback{margin-top:8px;font-size:17px;font-weight:700;text-align:center;padding:8px 14px;border-radius:12px}
+.feedback.ok{color:var(--ok);background:#e6f6ec}
+.feedback.bad{color:var(--bad);background:#fdecec}
+.feedback.info{color:var(--mut);background:#f6efe5}
+.inbtn{margin-top:14px;border:0;border-radius:14px;padding:12px 26px;font-size:17px;font-weight:700;
+  background:var(--ink);color:#fff}
+
+/* liczydło */
+.frame{padding:11px;border-radius:20px;touch-action:none;user-select:none;-webkit-user-select:none;
+  background:linear-gradient(135deg,#7a4822 0%,#5a3216 45%,#3c200c 100%);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.18),inset 0 -2px 0 rgba(0,0,0,.3),0 12px 26px rgba(70,35,10,.32)}
+.rods{display:flex;border-radius:10px;overflow:hidden;
+  background:linear-gradient(#fbf4e4,#efe0c3);box-shadow:inset 0 2px 7px rgba(0,0,0,.28)}
+.rod{flex:1;display:flex;flex-direction:column}
+.upper,.lower{position:relative}
+.upper{height:68px}
+.lower{height:158px}
+.stick{position:absolute;left:50%;top:0;bottom:0;width:4px;margin-left:-2px;
+  background:linear-gradient(90deg,#8d6c48,#e2cfa8,#8d6c48)}
+.beam{height:12px;position:relative;background:linear-gradient(#55311a,#2b170a);
+  box-shadow:0 2px 3px rgba(0,0,0,.3)}
+.beam.dot::after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;
+  border-radius:50%;background:#f3e2c0}
+.bead{position:absolute;left:3%;width:94%;height:28px;transition:top .12s ease-out;
+  clip-path:polygon(0 50%,20% 0,80% 0,100% 50%,80% 100%,20% 100%);
+  background:linear-gradient(180deg,#d08a4f 0%,#9a5222 55%,#62300f 100%)}
+.bead::after{content:"";position:absolute;left:24%;right:24%;top:10%;height:30%;border-radius:50%;
+  background:rgba(255,255,255,.35)}
+.bead.on{background:linear-gradient(180deg,#ff8b5e 0%,#e4572e 55%,#a5321a 100%)}
+.value{text-align:center;color:var(--mut);font-size:15px;font-weight:600;min-height:22px;margin-top:-4px}
+.value b{color:var(--ink);font-size:20px;font-variant-numeric:tabular-nums}
+
+/* przyciski */
+.actions{display:flex;gap:10px}
+.btn{height:54px;border-radius:18px;border:0;font-size:18px;font-weight:700}
+.btn:active{transform:scale(.97)}
+.btn.sec{flex:1;background:var(--card);box-shadow:0 2px 8px rgba(60,35,10,.1)}
+.btn.pri{flex:2;color:#fff;background:linear-gradient(135deg,var(--acc2),var(--acc));
+  box-shadow:0 8px 18px rgba(228,87,46,.35)}
+.btn.pri.next{background:linear-gradient(135deg,#34c27a,var(--ok));box-shadow:0 8px 18px rgba(31,157,87,.3)}
+.btn:disabled{opacity:.4;box-shadow:none}
+
+/* ustawienia */
+.overlay{position:fixed;inset:0;background:rgba(30,20,10,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:10}
+.overlay.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:520px;margin:0 auto;background:var(--bg);
+  border-radius:26px 26px 0 0;padding:10px 18px calc(env(safe-area-inset-bottom) + 18px);
+  transform:translateY(105%);transition:transform .25s ease-out;z-index:11;max-height:88vh;overflow:auto}
+.sheet.show{transform:none}
+.grab{width:40px;height:5px;border-radius:3px;background:#d6c9b8;margin:0 auto 12px}
+.sheet h2{margin:0 0 12px;font-size:22px;font-weight:800}
+.set{margin-bottom:14px}
+.set .t{font-size:13px;font-weight:700;color:var(--mut);margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px}
+.group{background:var(--card);border-radius:16px;overflow:hidden;margin-bottom:14px}
+.tog{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;font-size:16px;border-bottom:1px solid var(--line)}
+.tog:last-child{border-bottom:0}
+.sw{position:relative;width:50px;height:30px;flex:none}
+.sw input{opacity:0;width:0;height:0}
+.sw span{position:absolute;inset:0;background:#d9cfc2;border-radius:30px;transition:.2s}
+.sw span::after{content:"";position:absolute;left:3px;top:3px;width:24px;height:24px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.2s}
+.sw input:checked+span{background:var(--ok)}
+.sw input:checked+span::after{transform:translateX(20px)}
+.help{font-size:14px;color:var(--mut);line-height:1.5;margin:4px 2px 14px}
+.row2{display:flex;gap:10px}
+.done{flex:2;background:var(--ink);color:#fff}
+.reset{flex:1;background:var(--card);color:var(--bad);font-size:15px}
+.hidden{display:none}
+.hbtns{display:flex;gap:8px}
+.modes button{display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px}
+.modes .sy{font-size:21px;font-weight:800;line-height:1.1}
+.modes .lb{font-size:12px;font-weight:700}
+.problem{position:relative}
+.timer{position:absolute;right:16px;top:58px;font-size:13px;font-weight:700;color:var(--mut);font-variant-numeric:tabular-nums}
+.psheet{height:92vh}
+.cmp{background:var(--card);border-radius:16px;padding:4px 14px;margin-bottom:12px}
+.cmp table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.cmp th{font-size:11.5px;color:var(--mut);font-weight:700;text-align:right;padding:8px 0 6px;line-height:1.2}
+.cmp th:first-child,.cmp td:first-child{text-align:left}
+.cmp td{padding:10px 0;border-top:1px solid var(--line);text-align:right;font-size:15.5px}
+.cmp td.d{font-weight:700;font-size:13.5px;padding-left:6px}
+.up{color:var(--ok)} .down{color:var(--bad)} .same{color:var(--mut)}
+.verdict{background:var(--card);border-radius:16px;padding:14px;margin-bottom:12px;font-size:16px;line-height:1.45;font-weight:600;overflow:hidden}
+.verdict .em{font-size:30px;float:left;margin-right:10px;line-height:1}
+.chart{background:var(--card);border-radius:16px;padding:12px 12px 8px;margin-bottom:12px}
+.chart h3{margin:0 0 2px;font-size:15px}
+.chart .cs{font-size:13px;color:var(--mut);min-height:18px;margin-bottom:4px}
+.chart svg{display:block;width:100%;height:auto}
+.sync{font-size:13px;color:var(--mut);text-align:center;margin:4px 0 12px}
+.tot{display:flex;gap:8px;margin-bottom:12px}
+.tot div{flex:1;background:var(--card);border-radius:14px;padding:10px 6px;text-align:center}
+.tot b{display:block;font-size:19px;font-variant-numeric:tabular-nums}
+.tot small{font-size:11.5px;color:var(--mut);font-weight:600}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Soro<span>ban</span></h1>
+    <div class="hbtns"><button class="iconbtn" id="progBtn" aria-label="Postęp">📈</button><button class="iconbtn" id="gear" aria-label="Ustawienia">⚙︎</button></div>
+  </header>
+
+  <div class="pills">
+    <div class="pill"><b id="stStreak">0</b><small>🔥</small></div>
+    <div class="pill"><b id="stOk">0/0</b><small>✅</small></div>
+    <div class="pill"><b id="stBest">0</b><small>🏆</small></div>
+  </div>
+
+  <div class="seg modes" data-key="mode">
+    <button data-val="add"><span class="sy">+</span><span class="lb">Dodaj</span></button>
+    <button data-val="sub"><span class="sy">−</span><span class="lb">Odejmij</span></button>
+    <button data-val="mix"><span class="sy">±</span><span class="lb">Mieszane</span></button>
+    <button data-val="mul"><span class="sy">×</span><span class="lb">Mnóż</span></button>
+  </div>
+
+  <div class="card problem">
+    <div class="timer" id="timer"></div>
+    <div class="meta"><button id="metaBtn"></button></div>
+    <div class="pbody" id="pbody"></div>
+  </div>
+
+  <div class="frame"><div class="rods" id="rods"></div></div>
+  <div class="value" id="value"></div>
+
+  <div class="actions">
+    <button class="btn sec" id="clearBtn">Wyczyść</button>
+    <button class="btn pri" id="checkBtn">Sprawdź</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="sheet" id="sheet">
+  <div class="grab"></div>
+  <h2>Ustawienia</h2>
+  <div class="set"><div class="t" id="digLbl">Ile cyfr w liczbach</div>
+    <div class="seg" data-key="digits"><button data-val="1">1</button><button data-val="2">2</button><button data-val="3">3</button><button data-val="4">4</button><button data-val="5">5</button><button data-val="6">6</button></div></div>
+  <div class="set" id="mdigSet"><div class="t">Ile cyfr ma mnożnik</div>
+    <div class="seg" data-key="mdig"><button data-val="1">1</button><button data-val="2">2</button></div></div>
+  <div class="set" id="termsSet"><div class="t">Ile liczb w zadaniu</div>
+    <div class="seg" data-key="terms"><button data-val="2">2</button><button data-val="3">3</button><button data-val="4">4</button><button data-val="5">5</button><button data-val="7">7</button><button data-val="10">10</button></div></div>
+  <div class="set" id="dispSet"><div class="t">Pokazywanie liczb</div>
+    <div class="seg" data-key="display"><button data-val="all">Wszystkie</button><button data-val="seq">Po kolei</button><button data-val="flash">Błysk</button></div></div>
+  <div class="set" id="speedSet"><div class="t">Tempo błysku</div>
+    <div class="seg" data-key="speed"><button data-val="2000">2 s</button><button data-val="1500">1,5 s</button><button data-val="1000">1 s</button><button data-val="700">0,7 s</button></div></div>
+  <div class="group">
+    <label class="tog">Pokazuj liczbę z liczydła <span class="sw"><input type="checkbox" data-opt="showVal"><span></span></span></label>
+    <label class="tog">Czyść liczydło przy nowym zadaniu <span class="sw"><input type="checkbox" data-opt="autoClear"><span></span></span></label>
+    <label class="tog">Dźwięk koralików <span class="sw"><input type="checkbox" data-opt="sound"><span></span></span></label>
+  </div>
+  <div class="help">Przesuń koralik palcem w górę lub w dół albo po prostu go dotknij. Górny koralik to 5, każdy dolny to 1. Kropki na belce oznaczają jedności i tysiące. Po naciśnięciu „Sprawdź” koraliki same ustawiają wynik.<br>Tryb „Błysk” pokazuje liczby same, jedna po drugiej, jak na treningu anzan.</div>
+  <div class="row2">
+    <button class="btn reset" id="resetStats">Zeruj wyniki</button>
+    <button class="btn done" id="doneBtn">Gotowe</button>
+  </div>
+</div>
+
+<div class="sheet psheet" id="psheet">
+  <div class="grab"></div>
+  <h2>Twój postęp</h2>
+  <div class="seg" style="margin-bottom:12px"><button data-pf="level" class="sel">Ten poziom</button><button data-pf="all">Wszystkie zadania</button></div>
+  <div id="progBody"></div>
+  <div class="sync" id="syncInfo"></div>
+  <div class="row2"><button class="btn done" id="pDone">Zamknij</button></div>
+</div>
+
+<script>
+const RODS = 9, BH = 28, GAP = 4;
+const UPPER_H = 68, LOWER_H = 158;
+const $ = id => document.getElementById(id);
+
+let S = {digits:2, terms:3, mdig:1, mode:'add', display:'all', speed:1000, showVal:true, autoClear:true, sound:true};
+let stats = {ok:0, all:0, streak:0, best:0};
+try { Object.assign(S, JSON.parse(localStorage.getItem('soroban_set')||'{}')); } catch(e){}
+try { Object.assign(stats, JSON.parse(localStorage.getItem('soroban_stats')||'{}')); } catch(e){}
+if (!['all','seq','flash'].includes(S.display)) S.display='all';
+function save(){ try{ localStorage.setItem('soroban_set',JSON.stringify(S)); localStorage.setItem('soroban_stats',JSON.stringify(stats)); }catch(e){} }
+
+/* ---------- dźwięk ---------- */
+let actx = null;
+function clack(){
+  if (!S.sound) return;
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    if (actx.state==='suspended') actx.resume();
+    const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain();
+    o.type='triangle';
+    o.frequency.setValueAtTime(1700,t); o.frequency.exponentialRampToValueAtTime(500,t+0.035);
+    g.gain.setValueAtTime(0.22,t); g.gain.exponentialRampToValueAtTime(0.001,t+0.06);
+    o.connect(g); g.connect(actx.destination); o.start(t); o.stop(t+0.07);
+  }catch(e){}
+}
+
+/* ---------- liczydło ---------- */
+const heaven = Array(RODS).fill(0);
+const earth  = Array(RODS).fill(0);
+const beadEls = [];
+let drag = null;
+
+for (let r=0; r<RODS; r++){
+  const rod = document.createElement('div'); rod.className='rod';
+  const up = document.createElement('div'); up.className='upper'; up.innerHTML='<div class="stick"></div>';
+  const h = document.createElement('div'); h.className='bead';
+  h.addEventListener('pointerdown', ev=>down(ev,r,'h'));
+  up.appendChild(h);
+  const beam = document.createElement('div');
+  beam.className = 'beam' + (((RODS-1-r)%3===0) ? ' dot' : '');
+  const lo = document.createElement('div'); lo.className='lower'; lo.innerHTML='<div class="stick"></div>';
+  const es=[];
+  for (let i=0;i<4;i++){
+    const b=document.createElement('div'); b.className='bead';
+    b.addEventListener('pointerdown', ev=>down(ev,r,i));
+    lo.appendChild(b); es.push(b);
+  }
+  rod.append(up,beam,lo); $('rods').appendChild(rod);
+  beadEls.push({h, e:es});
+}
+
+function down(ev,r,b){ ev.preventDefault(); stopAnim(); drag={r,b,y:ev.clientY,done:false}; }
+document.addEventListener('pointermove', ev=>{
+  if (!drag || drag.done) return;
+  const dy = ev.clientY - drag.y;
+  if (Math.abs(dy) > 10){ move(drag.r, drag.b, dy<0 ? 'up' : 'down'); drag.done = true; }
+});
+document.addEventListener('pointerup', ()=>{ if (drag && !drag.done) move(drag.r, drag.b, 'tap'); drag=null; });
+document.addEventListener('pointercancel', ()=>{ drag=null; });
+
+function move(r,b,dir){
+  const ph=heaven[r], pe=earth[r];
+  if (b==='h') heaven[r] = dir==='tap' ? ph^1 : (dir==='down' ? 1 : 0);
+  else if (dir==='tap') earth[r] = b < pe ? b : b+1;
+  else if (dir==='up')  earth[r] = Math.max(pe, b+1);
+  else                  earth[r] = Math.min(pe, b);
+  if (ph!==heaven[r] || pe!==earth[r]){ clack(); draw(); }
+}
+function value(){ let v=0; for (let r=0;r<RODS;r++) v = v*10 + heaven[r]*5 + earth[r]; return v; }
+function draw(){
+  for (let r=0;r<RODS;r++){
+    const {h,e}=beadEls[r];
+    h.style.top = (heaven[r] ? UPPER_H-GAP-BH : GAP) + 'px';
+    h.classList.toggle('on', !!heaven[r]);
+    for (let i=0;i<4;i++){
+      const on = i < earth[r];
+      e[i].style.top = (on ? GAP + i*BH : LOWER_H-GAP-(4-i)*BH) + 'px';
+      e[i].classList.toggle('on', on);
+    }
+  }
+  $('value').innerHTML = S.showVal ? 'Na liczydle: <b>'+value()+'</b>' : '';
+}
+let animTimers=[];
+function stopAnim(){ animTimers.forEach(clearTimeout); animTimers=[]; }
+function clearAbacus(){ stopAnim(); heaven.fill(0); earth.fill(0); draw(); }
+function setAbacus(n){
+  stopAnim();
+  const s = String(n).padStart(RODS,'0').slice(-RODS);
+  let delay = 150;
+  for (let r=0;r<RODS;r++){
+    const d=+s[r], h=d>=5?1:0, e=d%5;
+    if (heaven[r]===h && earth[r]===e) continue;
+    animTimers.push(setTimeout(()=>{ heaven[r]=h; earth[r]=e; clack(); draw(); }, delay));
+    delay += 190;
+  }
+}
+
+/* ---------- zadania ---------- */
+let tStart=0, terms=[], answer=0, seqIdx=0, checked=false, lastOk=null, userVal=0, flashTimer=null;
+const rnd = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const num = () => { const d=S.digits; return rnd(d===1?1:10**(d-1), 10**d-1); };
+const sym = op => op==='+' ? '+' : op==='x' ? '×' : '−';
+const disp = () => S.mode==='mul' ? 'all' : S.display;
+const pl = (n,a,b,c) => n===1 ? a : (n%10>=2 && n%10<=4 && (n%100<10 || n%100>=20)) ? b : c;
+
+function gen(){
+  clearTimeout(flashTimer);
+  const n=S.terms; terms=[];
+  if (S.mode==='mul'){
+    const b = S.mdig===1 ? rnd(2,9) : rnd(11,99);
+    terms.push({op:'+',v:num()}, {op:'x',v:b});
+  } else if (S.mode==='add'){
+    for (let i=0;i<n;i++) terms.push({op:'+',v:num()});
+  } else if (S.mode==='sub'){
+    const subs=[]; for (let i=0;i<n-1;i++) subs.push(num());
+    terms.push({op:'+', v: subs.reduce((a,b)=>a+b,0) + num()});
+    subs.forEach(v=>terms.push({op:'-',v}));
+  } else {
+    let run=num(); terms.push({op:'+',v:run});
+    for (let i=1;i<n;i++){
+      const v=num(); let op = Math.random()<0.5 ? '-' : '+';
+      if (op==='-' && v>run) op='+';
+      run += op==='+' ? v : -v;
+      terms.push({op,v});
+    }
+  }
+  answer = S.mode==='mul' ? terms[0].v*terms[1].v : terms.reduce((a,t)=>a+(t.op==='+'?t.v:-t.v),0);
+  seqIdx = disp()==='flash' ? -1 : 0;
+  tStart = disp()==='flash' ? 0 : Date.now();
+  checked=false; lastOk=null; lastSec=null;
+  if (S.autoClear) clearAbacus();
+  render();
+}
+
+function render(){
+  clearTimeout(flashTimer);
+  $('metaBtn').textContent = levelName(curLevel())+'  ✎';
+  const D = disp();
+  const running = D!=='all' && !checked;
+  if (running && seqIdx>=terms.length && !tStart) tStart = Date.now();
+  let html='';
+  if (running && seqIdx < 0){
+    html += '<div class="sub" style="font-size:17px">Liczby pojawią się same, jedna po drugiej</div>';
+    html += '<button class="inbtn" id="startBtn">▶ Start</button>';
+  } else if (running && seqIdx < terms.length){
+    const t=terms[seqIdx];
+    const len = String(t.v).length + (seqIdx>0?1:0);
+    html += '<div class="big"'+(len>5?' style="font-size:'+Math.round(380/len)+'px"':'')+'>'+(seqIdx>0?'<span class="op">'+sym(t.op)+'</span>':'')+t.v+'</div>';
+    html += '<div class="sub">'+(seqIdx+1)+' / '+terms.length+'</div>';
+    if (D==='seq') html += '<button class="inbtn" id="nextTerm">'+(seqIdx<terms.length-1?'Dalej ›':'Koniec ›')+'</button>';
+  } else if (running){
+    html += '<div class="big" style="color:#cdbfae">= ?</div><div class="sub">Ustaw wynik na liczydle</div>';
+  } else {
+    html += '<div class="terms">';
+    terms.forEach((t,i)=>{
+      html += '<div class="row"><span class="op">'+(i>0?sym(t.op):'')+'</span><span>'+t.v+'</span></div>';
+    });
+    html += '<div class="row res"><span class="op">=</span><span class="'+(checked?'a':'q')+'">'+(checked?answer:'?')+'</span></div></div>';
+  }
+  if (checked){
+    if (lastOk===true)  html += '<div class="feedback ok">Świetnie! Dobrze ✓</div>';
+    if (lastOk===false) html += '<div class="feedback bad">Ustawiłeś '+userVal+', a wynik to '+answer+'</div>';
+    if (lastOk===null)  html += '<div class="feedback info">Wynik: '+answer+'</div>';
+  }
+  $('pbody').innerHTML = html;
+
+  const sb=$('startBtn'); if (sb) sb.onclick=()=>{ seqIdx=0; render(); };
+  const nb=$('nextTerm'); if (nb) nb.onclick=()=>{ seqIdx++; render(); };
+  if (running && D==='flash' && seqIdx>=0 && seqIdx<terms.length)
+    flashTimer = setTimeout(()=>{ seqIdx++; render(); }, S.speed);
+
+  const cb=$('checkBtn');
+  cb.textContent = checked ? 'Następne ›' : 'Sprawdź';
+  cb.classList.toggle('next', checked);
+  cb.disabled = running && seqIdx < terms.length;
+  renderStats();
+}
+function renderStats(){
+  $('stStreak').textContent = stats.streak;
+  $('stOk').textContent = stats.ok+'/'+stats.all;
+  $('stBest').textContent = stats.best;
+}
+
+$('checkBtn').onclick = ()=>{
+  if (checked){ gen(); return; }
+  userVal = value();
+  if (userVal===0) lastOk = null;
+  else {
+    lastOk = userVal===answer; stats.all++;
+    if (tStart){
+      const sec = Math.round((Date.now()-tStart)/100)/10;
+      if (sec>0 && sec<900) addRecord(Object.assign({t:Date.now(), ok:lastOk?1:0, s:sec}, curLevel()));
+    }
+    if (lastOk){ stats.ok++; stats.streak++; stats.best=Math.max(stats.best,stats.streak); }
+    else stats.streak=0;
+  }
+  checked=true; save(); render(); setAbacus(answer);
+};
+$('clearBtn').onclick = ()=>{ if (value()) clack(); clearAbacus(); };
+
+/* ---------- ustawienia ---------- */
+function openSheet(o){ $('sheet').classList.toggle('show',o); $('overlay').classList.toggle('show',o); }
+$('gear').onclick = ()=>openSheet(true);
+$('metaBtn').onclick = ()=>openSheet(true);
+$('overlay').onclick = ()=>openSheet(false);
+$('doneBtn').onclick = ()=>openSheet(false);
+
+function markSegs(){
+  document.querySelectorAll('.seg[data-key]').forEach(seg=>{
+    const key=seg.dataset.key;
+    seg.querySelectorAll('button').forEach(b=>b.classList.toggle('sel', String(S[key])===b.dataset.val));
+  });
+  const mul = S.mode==='mul';
+  $('speedSet').classList.toggle('hidden', S.display!=='flash' || mul);
+  $('mdigSet').classList.toggle('hidden', !mul);
+  $('termsSet').classList.toggle('hidden', mul);
+  $('dispSet').classList.toggle('hidden', mul);
+  $('digLbl').textContent = mul ? 'Ile cyfr ma pierwsza liczba' : 'Ile cyfr w liczbach';
+}
+document.querySelectorAll('.seg[data-key]').forEach(seg=>{
+  const key=seg.dataset.key;
+  seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    S[key] = isNaN(+b.dataset.val) ? b.dataset.val : +b.dataset.val;
+    markSegs(); save();
+    if (key!=='speed' && !(key==='mdig' && S.mode!=='mul')) gen();
+  });
+});
+document.querySelectorAll('[data-opt]').forEach(inp=>{
+  const k=inp.dataset.opt; inp.checked=!!S[k];
+  inp.onchange=()=>{ S[k]=inp.checked; save(); draw(); };
+});
+$('resetStats').onclick = ()=>{
+  const b=$('resetStats');
+  if (b.dataset.c){ stats={ok:0,all:0,streak:0,best:0}; save(); renderStats(); b.textContent='Zeruj wyniki'; delete b.dataset.c; }
+  else { b.dataset.c='1'; b.textContent='Na pewno?'; setTimeout(()=>{ if(b.dataset.c){ delete b.dataset.c; b.textContent='Zeruj wyniki'; } },3000); }
+};
+
+/* ---------- poziom ---------- */
+function curLevel(){
+  return S.mode==='mul' ? {m:'mul', d:S.digits, n:S.mdig, f:0}
+                        : {m:S.mode, d:S.digits, n:S.terms, f:S.display==='flash'?1:0};
+}
+const lkey = r => r.m+'|'+r.d+'|'+r.n+'|'+(r.f?1:0);
+const cyf = n => n+' '+pl(n,'cyfra','cyfry','cyfr');
+function levelName(L){
+  if (L.m==='mul') return cyf(L.d)+' × '+cyf(L.n);
+  const mn={add:'dodawanie',sub:'odejmowanie',mix:'mieszane'}[L.m];
+  return cyf(L.d)+' · '+L.n+' '+pl(L.n,'liczba','liczby','liczb')+' · '+mn+(L.f?' · błysk':'');
+}
+function fmtT(s){
+  if (s==null) return '–';
+  return s<60 ? s.toFixed(1).replace('.',',')+' s' : Math.floor(s/60)+':'+String(Math.round(s%60)).padStart(2,'0')+' min';
+}
+
+/* ---------- stoper ---------- */
+let lastSec=null;
+function tick(){
+  const el=$('timer');
+  if (checked){ el.textContent = lastSec!=null ? '⏱ '+fmtT(lastSec) : ''; return; }
+  el.textContent = tStart ? '⏱ '+Math.floor((Date.now()-tStart)/1000)+' s' : '';
+}
+
+/* ---------- historia ---------- */
+let hist=[];
+try{ hist = JSON.parse(localStorage.getItem('soroban_hist')||'[]'); }catch(e){}
+if (!Array.isArray(hist)) hist=[];
+function saveHist(){ try{ localStorage.setItem('soroban_hist', JSON.stringify(hist.slice(-20000))); }catch(e){} }
+const dayKey = t => { const d=new Date(t); return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'); };
+function addRecord(rec){ lastSec=rec.s; hist.push(rec); saveHist(); pushDay(dayKey(rec.t)); }
+
+/* ---------- zapis na koncie (gdy dostępny) ---------- */
+let cloud=null, cloudState='local';
+const writing={}, dirty={};
+const withTimeout = (p,ms) => Promise.race([p, new Promise((_,rej)=>setTimeout(()=>rej(new Error('timeout')),ms))]);
+async function initCloud(){
+  renderSync();
+  try{
+    if (!window.claude || typeof window.claude.use!=='function') return;
+    const [db,user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const uid = await user.id(); if (!uid) return;
+    cloud = db.collection('data/users/'+uid);
+    cloudState='loading'; renderSync();
+    const snap = await withTimeout(cloud.get(), 10000);
+    const have = new Set(hist.map(r=>r.t)), cloudDays = {};
+    snap.docs.forEach(doc=>{
+      if (!doc.exists || doc.id[0]!=='d') return;
+      const items = (doc.data()||{}).items || [];
+      cloudDays[doc.id.slice(1)] = new Set(items.map(r=>r.t));
+      items.forEach(r=>{ if (r && typeof r.t==='number' && !have.has(r.t)){ hist.push(Object.assign({},r)); have.add(r.t); } });
+    });
+    hist.sort((a,b)=>a.t-b.t); saveHist();
+    cloudState='ok'; renderSync(); renderProgressIfOpen();
+    const missing = {};
+    hist.forEach(r=>{ const k=dayKey(r.t); if (!cloudDays[k] || !cloudDays[k].has(r.t)) missing[k]=1; });
+    for (const k of Object.keys(missing)) await pushDay(k);
+  }catch(e){ cloudState='err'; renderSync(); }
+}
+async function pushDay(k){
+  if (!cloud) return;
+  if (writing[k]){ dirty[k]=1; return; }
+  writing[k]=1;
+  try{
+    do{
+      dirty[k]=0;
+      await cloud.doc('d'+k).set({items: hist.filter(r=>dayKey(r.t)===k)});
+    } while (dirty[k]);
+    cloudState='ok';
+  }catch(e){ cloudState='err'; }
+  writing[k]=0; renderSync();
+}
+function renderSync(){
+  const el=$('syncInfo'); if (!el) return;
+  el.textContent = cloudState==='ok' ? '☁️ Wyniki zapisują się też na Twoim koncie Claude'
+    : cloudState==='loading' ? '☁️ Łączenie z kontem…'
+    : cloudState==='err' ? '⚠️ Nie udało się zapisać na koncie – wyniki są w telefonie'
+    : '📱 Wyniki zapisują się w tym telefonie';
+}
+
+/* ---------- ekran postępu ---------- */
+let pf='level';
+const DAY=864e5, WD=['nd','pn','wt','śr','cz','pt','sb'];
+function openProg(o){ $('psheet').classList.toggle('show',o); $('overlay').classList.toggle('show',o); if (o) renderProgress(); }
+function renderProgressIfOpen(){ if ($('psheet').classList.contains('show')) renderProgress(); }
+function summ(list){
+  const okL = list.filter(r=>r.ok);
+  return { n:list.length, acc: list.length ? okL.length/list.length*100 : null,
+           t: okL.length ? okL.reduce((a,r)=>a+r.s,0)/okL.length : null };
+}
+function dcell(va,vb,kind){
+  if (va==null || vb==null) return '<td class="d same">–</td>';
+  const d = va-vb;
+  if (Math.abs(d) < (kind==='t'?0.05:0.5)) return '<td class="d same">bez zmian</td>';
+  const good = kind==='t' ? d<0 : d>0;
+  const sg = d>0 ? '+' : '−';
+  const txt = kind==='n' ? sg+Math.abs(d) : kind==='a' ? sg+Math.round(Math.abs(d))+' pkt' : sg+Math.abs(d).toFixed(1).replace('.',',')+' s';
+  return '<td class="d '+(good?'up':'down')+'">'+(good?'▲ ':'▼ ')+txt+'</td>';
+}
+const pct = v => v==null ? '–' : Math.round(v)+'%';
+function verdict(a,b){
+  if (a.n<3 || b.n<3)
+    return '<span class="em">📊</span>Za mało danych do porównania. Potrzeba co najmniej 3 zadań '+(pf==='level'?'na tym poziomie ':'')+
+      'w ostatnich 7 dniach i 3 zadań w tygodniu wcześniej.'+(b.n<3?' Ćwicz dalej – za tydzień zobaczysz tu, czy jesteś lepszy.':'');
+  const parts=[]; let score=0;
+  if (a.t!=null && b.t!=null){
+    const f=(b.t-a.t)/b.t*100;
+    if (f>=3){ parts.push('szybszy o '+Math.round(f)+'%'); score++; }
+    else if (f<=-3){ parts.push('wolniejszy o '+Math.round(-f)+'%'); score--; }
+  }
+  const ad=a.acc-b.acc;
+  if (ad>=3){ parts.push('dokładniejszy o '+Math.round(ad)+' pkt %'); score++; }
+  else if (ad<=-3){ parts.push('mniej dokładny o '+Math.round(-ad)+' pkt %'); score--; }
+  if (!parts.length) return '<span class="em">➖</span>Jesteś na podobnym poziomie co tydzień temu.';
+  const head = score>0 ? 'Jesteś lepszy niż tydzień temu!' : score<0 ? 'Ten tydzień trochę słabszy – nie odpuszczaj!' : 'Wynik mieszany.';
+  return '<span class="em">'+(score>0?'🎉':score<0?'💪':'⚖️')+'</span>'+head+' Jesteś '+parts.join(' i ')+'.';
+}
+function barChart(days, key, color, fmt){
+  const W=340, H=136, pb=18, pt=10, GL=34, bw=(W-GL)/days.length;
+  const vals = days.map(d=>d[key]).filter(v=>v!=null);
+  const max = key==='acc' ? 100 : Math.max(1, ...vals)*1.1;
+  let s='<svg viewBox="0 0 '+W+' '+H+'" role="img">';
+  let lab='';
+  [0.5,1].forEach(g=>{ const y=H-pb-(H-pb-pt)*g;
+    s+='<line x1="'+GL+'" x2="'+W+'" y1="'+y+'" y2="'+y+'" stroke="#f0e8dc" stroke-width="1"/>';
+    lab+='<text x="'+(GL-5)+'" y="'+(y+3.5)+'" font-size="10" text-anchor="end" fill="#8f8072">'+fmt(max*g)+'</text>'; });
+  s+='<line x1="'+GL+'" x2="'+W+'" y1="'+(H-pb)+'" y2="'+(H-pb)+'" stroke="#d9cdbd" stroke-width="1"/>';
+  days.forEach((d,i)=>{
+    const v=d[key], x=GL+i*bw;
+    if (v!=null){
+      const h=Math.max(3,(H-pb-pt)*v/max);
+      s+='<path d="M'+(x+4)+','+(H-pb)+'V'+(H-pb-h+4)+'q0,-4 4,-4h'+(bw-16)+'q4,0 4,4V'+(H-pb)+'Z" fill="'+color+'"/>';
+    }
+    s+='<rect class="bar" data-i="'+i+'" x="'+x+'" y="0" width="'+bw+'" height="'+H+'" fill="transparent"/>';
+    if ((days.length-1-i)%2===0)
+      s+='<text x="'+(x+bw/2)+'" y="'+(H-4)+'" font-size="10" text-anchor="middle" fill="#8f8072">'+(i===days.length-1?'dziś':d.date.getDate())+'</text>';
+  });
+  return s+lab+'</svg>';
+}
+function renderProgress(){
+  const L=curLevel(), K=lkey(L);
+  const list = pf==='level' ? hist.filter(r=>lkey(r)===K) : hist;
+  const now=Date.now();
+  const a=summ(list.filter(r=>r.t>now-7*DAY)), b=summ(list.filter(r=>r.t<=now-7*DAY && r.t>now-14*DAY));
+  let h = '<div class="sub" style="text-align:center;margin:-2px 0 10px">'+
+    (pf==='level' ? 'Poziom: <b>'+levelName(L)+'</b>' : 'Czas najlepiej porównywać na jednym poziomie')+'</div>';
+  if (!list.length){
+    $('progBody').innerHTML = h+'<div class="verdict"><span class="em">🧮</span>Brak rozwiązanych zadań'+(pf==='level'?' na tym poziomie':'')+
+      '. Rozwiąż kilka (ustaw wynik na liczydle i naciśnij „Sprawdź”), a tu pojawią się Twoje wyniki.</div>';
+    return;
+  }
+  h += '<div class="verdict">'+verdict(a,b)+'</div>';
+  h += '<div class="cmp"><table><tr><th></th><th>Tydzień<br>wcześniej</th><th>Ostatnie<br>7 dni</th><th>Zmiana</th></tr>'+
+    '<tr><td>Zadania</td><td>'+b.n+'</td><td>'+a.n+'</td>'+dcell(a.n,b.n,'n')+'</tr>'+
+    '<tr><td>Skuteczność</td><td>'+pct(b.acc)+'</td><td>'+pct(a.acc)+'</td>'+dcell(a.acc,b.acc,'a')+'</tr>'+
+    '<tr><td>Średni czas*</td><td>'+fmtT(b.t)+'</td><td>'+fmtT(a.t)+'</td>'+dcell(a.t,b.t,'t')+'</tr></table></div>';
+  const all=summ(list), okT=list.filter(r=>r.ok).map(r=>r.s);
+  h += '<div class="tot"><div><b>'+all.n+'</b><small>wszystkich zadań</small></div><div><b>'+pct(all.acc)+'</b><small>skuteczność</small></div>'+
+       '<div><b>'+(okT.length?fmtT(Math.min(...okT)):'–')+'</b><small>najlepszy czas</small></div></div>';
+  const start = new Date(); start.setHours(0,0,0,0);
+  const days=[];
+  for (let i=13;i>=0;i--){
+    const d0 = new Date(start); d0.setDate(start.getDate()-i);
+    const d1 = new Date(d0); d1.setDate(d0.getDate()+1);
+    days.push(Object.assign({date:d0}, summ(list.filter(r=>r.t>=d0.getTime() && r.t<d1.getTime()))));
+  }
+  h += '<div class="chart" data-k="t"><h3>Średni czas na zadanie*</h3><div class="cs">Niżej = szybciej. Dotknij słupka, żeby zobaczyć dzień.</div>'+
+       barChart(days,'t','#e4572e',v=>Math.round(v)+' s')+'</div>';
+  h += '<div class="chart" data-k="acc"><h3>Skuteczność</h3><div class="cs">Odsetek dobrze rozwiązanych zadań.</div>'+
+       barChart(days,'acc','#1f9d57',v=>Math.round(v)+'%')+'</div>';
+  h += '<div class="help">* Czas liczony od pokazania zadania do naciśnięcia „Sprawdź”, tylko dla dobrych odpowiedzi. '+
+       'W trybie „Błysk” – od zniknięcia ostatniej liczby.</div>';
+  $('progBody').innerHTML = h;
+  document.querySelectorAll('#progBody .chart').forEach(ch=>{
+    const k=ch.dataset.k;
+    ch.querySelectorAll('rect.bar').forEach(r=>r.onclick=()=>{
+      const d=days[+r.dataset.i];
+      const lab = WD[d.date.getDay()]+' '+d.date.getDate()+'.'+String(d.date.getMonth()+1).padStart(2,'0');
+      ch.querySelector('.cs').innerHTML = '<b>'+lab+'</b>: '+(d.n ? (k==='t'?fmtT(d.t):pct(d.acc))+' · '+d.n+' '+pl(d.n,'zadanie','zadania','zadań') : 'brak ćwiczeń');
+    });
+  });
+}
+$('progBtn').onclick = ()=>openProg(true);
+$('pDone').onclick = ()=>openProg(false);
+$('overlay').onclick = ()=>{ openSheet(false); openProg(false); };
+document.querySelectorAll('button[data-pf]').forEach(b=>b.onclick=()=>{
+  pf=b.dataset.pf;
+  document.querySelectorAll('button[data-pf]').forEach(x=>x.classList.toggle('sel', x===b));
+  renderProgress();
+});
+
+markSegs(); draw(); gen(); setInterval(tick, 250); initCloud();
+if ('serviceWorker' in navigator && location.protocol==='https:') { try { navigator.serviceWorker.register('sw.js'); } catch(e){} }
+</script>
+</body>
+</html>
