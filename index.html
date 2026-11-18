@@ -187,13 +187,25 @@ details.kg .klist{margin:0;border-radius:0;border-top:1px solid var(--line)}
 .kbig .t2{color:#fff;background:linear-gradient(135deg,var(--acc2),var(--acc))}
 .kbig .btn:disabled{opacity:.45}
 .info{font-weight:500 !important;font-size:15px !important}
+
+/* v7 */
+.hbtns{gap:6px}
+.iconbtn{width:38px;height:38px;font-size:18px;position:relative}
+.iconbtn.alert::after{content:"";position:absolute;top:2px;right:2px;width:10px;height:10px;border-radius:50%;background:var(--acc);border:2px solid #fff}
+h1 small{font-size:13px;font-weight:800;color:#fff;background:var(--ink);border-radius:8px;padding:2px 7px;margin-left:8px;vertical-align:middle;letter-spacing:0}
+h1 small:empty{display:none}
+#ptabs button{font-size:12.5px;padding:9px 1px;white-space:nowrap;letter-spacing:-.2px}
+.kpass{font-size:12.5px;font-weight:700;color:var(--ok);text-align:right;line-height:1.3;flex:none}
+.klock{font-size:12px;font-weight:700;color:var(--mut);text-align:right;line-height:1.3;flex:none}
+.kf small+small{margin-top:3px}
 </style>
 </head>
 <body>
 <div class="app">
   <header>
-    <h1>Soro<span>ban</span></h1>
+    <h1>Soro<span>ban</span><small id="gradeTag"></small></h1>
     <div class="hbtns">
+      <button class="iconbtn" id="gradeBtn" aria-label="Stopnie">🏅</button>
       <button class="iconbtn" id="keysBtn" aria-label="Trudne układy">🎯</button>
       <button class="iconbtn" id="progBtn" aria-label="Postęp">📈</button>
       <button class="iconbtn" id="gear" aria-label="Ustawienia">⚙︎</button>
@@ -259,7 +271,7 @@ details.kg .klist{margin:0;border-radius:0;border-top:1px solid var(--line)}
 
 <div class="sheet psheet" id="psheet">
   <div class="grab"></div>
-  <div class="seg" id="ptabs" style="margin-bottom:12px"><button data-tab="prog">📈 Postęp</button><button data-tab="keys">🎯 Trudne układy</button></div>
+  <div class="seg" id="ptabs" style="margin-bottom:12px"><button data-tab="prog">📈 Postęp</button><button data-tab="keys">🎯 Układy</button><button data-tab="grade">🏅 Stopnie</button><button data-tab="chal">⚡ Wyzwania</button></div>
   <div class="seg" id="pfilter" style="margin-bottom:12px"><button data-pf="level" class="sel">Ten poziom</button><button data-pf="all">Wszystkie zadania</button></div>
   <div id="progBody"></div>
   <div class="sync" id="syncInfo"></div>
@@ -353,7 +365,7 @@ function setAbacus(n){
 const rnd = (a,b) => a+Math.floor(Math.random()*(b-a+1));
 const num = () => { const d=S.digits; return rnd(d===1?1:10**(d-1), 10**d-1); };
 const sym = op => op==='+' ? '+' : op==='x' ? '×' : '−';
-const disp = () => S.mode==='mul' ? 'all' : S.display;
+const disp = () => (exam||chal||S.mode==='mul') ? 'all' : S.display;
 const pl = (n,a,b,c) => n===1 ? a : (n%10>=2 && n%10<=4 && (n%100<10||n%100>=20)) ? b : c;
 const cyf = n => n+' '+pl(n,'cyfra','cyfry','cyfr');
 function fmtT(s){
@@ -478,9 +490,9 @@ function genRaw(){
       run+=op==='+'?v:-v; terms.push({op,v}); }
   }
   const answer = S.mode==='mul' ? terms[0].v*terms[1].v : terms.reduce((a,t)=>a+(t.op==='+'?t.v:-t.v),0);
-  return {terms, answer, keys:analyze(terms,S.mode)};
+  return {terms, answer, keys:analyze(terms,S.mode), lvl:curLevel()};
 }
-let focus=null, test=null;
+let focus=null, test=null, exam=null, chal=null;
 function pickProblem(){
   const st=keyStats(), sc=k=>st[k]?st[k].score:PRIOR;
   if (focus){
@@ -518,6 +530,8 @@ let cur=null, phase='show', seqIdx=0, tStart=0, tries=0, rec=null, lastSec=null,
 
 function next(){
   clearTimeout(flashTimer);
+  if (exam){ nextExam(); return; }
+  chal=null;
   if (test && test.i>=test.n){ phase='testdone'; tStart=0; render(); return; }
   cur=pickProblem();
   if (test) cur.keys.forEach(k=>test.cats.push(keyCat(k)));
@@ -533,18 +547,21 @@ function startShow(){
 }
 function reveal(){
   lastSec = tStart ? Math.round((Date.now()-tStart)/100)/10 : null;
-  phase='reveal'; render(); setAbacus(cur.answer);
+  phase='reveal'; render(); if (cur.answer<1e9) setAbacus(cur.answer);
 }
 function judge(ok){
   if (!rec){
-    rec = Object.assign({t:Date.now(), ok:ok?1:0, s:lastSec||0, k:cur.keys, r:1}, curLevel());
+    rec = Object.assign({t:Date.now(), ok:ok?1:0, s:lastSec||0, k:cur.keys, r:1}, cur.lvl||curLevel());
     if (test) rec.x=1;
+    if (exam) rec.x=2;
     if (lastSec && lastSec<900) addRecord(rec); else rec.skip=1;
     stats.all++;
     if (ok){ stats.ok++; stats.streak++; stats.best=Math.max(stats.best,stats.streak); } else stats.streak=0;
     save();
     if (test) test.res.push({ok, s:lastSec, k:cur.keys});
+    if (exam) exam.res.push({ok, s:lastSec});
   } else if (!rec.skip){ rec.r++; saveHist(); pushDay(dayKey(rec.t)); }
+  if (exam){ exam.i++; nextExam(); return; }
   if (ok){ if (test) test.i++; next(); }
   else { tries++; clearAbacus(); startShow(); }
 }
@@ -566,18 +583,24 @@ function startFocus(keys){
 
 function render(){
   clearTimeout(flashTimer);
-  $('metaBtn').textContent = levelName(curLevel())+'  ✎';
+  if (chal || phase==='examdone'){ renderSpecial(); renderStats(); return; }
+  $('metaBtn').textContent = exam ? '🏅 Egzamin '+exam.L.name : levelName(curLevel())+'  ✎';
 
   // pasek trybu
   const bn=$('banner');
   if (focus){
     const names=focus.keys.slice(0,3).map(shortName).join(', ');
     bn.innerHTML='<span>🎯 Ćwiczysz: '+names+(focus.miss?'<br><small style="font-weight:600">Przy tych ustawieniach trudno o taki układ – dodaj cyfr lub liczb.</small>':'')+'</span><button id="bnX" aria-label="Zakończ">✕</button>';
+  } else if (exam){
+    bn.innerHTML='<span>🏅 Zadanie '+Math.min(exam.i+1,exam.q.length)+' z '+exam.q.length+' · zostało <b id="exCd">'+fmtClock(exam.tEnd-Date.now())+'</b>'+
+      (exam.ask?'<br><small style="font-weight:600">Przerwanie = egzamin niezdany. Dotknij ✕ jeszcze raz.</small>':'')+'</span><button id="bnX" aria-label="Przerwij">✕</button>';
   } else if (test){
     bn.innerHTML='<span>📝 Test: '+(phase==='testdone'?'koniec':'zadanie '+Math.min(test.i+1,test.n)+' z '+test.n)+'</span><button id="bnX" aria-label="Zakończ">✕</button>';
   }
-  bn.classList.toggle('hidden', !focus && !test);
-  const bx=$('bnX'); if (bx) bx.onclick=()=>{ focus=null; test=null; next(); };
+  bn.classList.toggle('hidden', !focus && !test && !exam);
+  const bx=$('bnX'); if (bx) bx.onclick=()=>{
+    if (exam){ if (!exam.ask){ exam.ask=true; render(); } else finishExam(); return; }
+    focus=null; test=null; next(); };
 
   const D=disp();
   const running = phase==='show' && D!=='all';
@@ -637,6 +660,8 @@ function render(){
   renderStats();
 }
 function renderStats(){
+  const g=currentGrade(); $('gradeTag').textContent = g ? g.name : '';
+  $('gradeBtn').classList.toggle('alert', examAvailable());
   $('stStreak').textContent=stats.streak;
   $('stOk').textContent=stats.ok+'/'+stats.all;
   $('stBest').textContent=stats.best;
@@ -645,6 +670,12 @@ function tick(){
   const el=$('timer');
   if (phase==='testdone'){ el.textContent=''; return; }
   if (phase==='reveal'){ el.textContent = lastSec!=null ? '⏱ '+fmtT(lastSec) : ''; return; }
+  if (exam && phase!=='examdone'){
+    const left=exam.tEnd-Date.now(); const cd=$('exCd'); if (cd) cd.textContent=fmtClock(left);
+    if (left<=0){ finishExam(); return; }
+  }
+  if (chal){ el.textContent=''; const ct=$('chT'); if (ct && chal.stage==='run') ct.textContent=fmtClock(Date.now()-chal.t0); return; }
+  if (phase==='examdone'){ el.textContent=''; return; }
   el.textContent = tStart ? '⏱ '+Math.floor((Date.now()-tStart)/1000)+' s' : '';
 }
 
@@ -669,8 +700,10 @@ function markSegs(){
 document.querySelectorAll('.seg[data-key]').forEach(seg=>{
   const key=seg.dataset.key;
   seg.querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    if (exam && phase!=='examdone') return;
     S[key]=isNaN(+b.dataset.val)?b.dataset.val:+b.dataset.val;
     if (key==='mode') focus=null;
+    exam=null; chal=null;
     markSegs(); save();
     if (key!=='speed' && key!=='pick' && !(key==='mdig'&&S.mode!=='mul')) next();
   });
@@ -701,13 +734,14 @@ async function initCloud(){
     const snap=await withTimeout(cloud.get(),10000);
     const have=new Set(hist.map(r=>r.t)), cloudDays={};
     snap.docs.forEach(doc=>{
+      if (doc.exists && doc.id==='meta'){ mergeMeta(doc.data()); return; }
       if (!doc.exists||doc.id[0]!=='d') return;
       const items=(doc.data()||{}).items||[];
       cloudDays[doc.id.slice(1)]=new Set(items.map(r=>r.t));
       items.forEach(r=>{ if (r&&typeof r.t==='number'&&!have.has(r.t)){ hist.push(Object.assign({},r)); have.add(r.t); } });
     });
     hist.sort((a,b)=>a.t-b.t); saveHist();
-    cloudState='ok'; renderSync(); renderSheetIfOpen();
+    saveMeta(); cloudState='ok'; renderSync(); renderSheetIfOpen(); renderStats(); pushMeta();
     const missing={};
     hist.forEach(r=>{ const k=dayKey(r.t); if (!cloudDays[k]||!cloudDays[k].has(r.t)) missing[k]=1; });
     for (const k of Object.keys(missing)) await pushDay(k);
@@ -743,10 +777,11 @@ function renderSheetIfOpen(){ if ($('psheet').classList.contains('show')) render
 function renderSheet(){
   document.querySelectorAll('#ptabs button').forEach(b=>b.classList.toggle('sel', b.dataset.tab===ptab));
   $('pfilter').classList.toggle('hidden', ptab!=='prog');
-  ptab==='prog' ? renderProgress() : renderKeys();
+  ({prog:renderProgress, keys:renderKeys, grade:renderGrades, chal:renderChals})[ptab]();
 }
 $('progBtn').onclick=()=>openProg(true,'prog');
 $('keysBtn').onclick=()=>openProg(true,'keys');
+$('gradeBtn').onclick=()=>openProg(true,'grade');
 $('pDone').onclick=()=>openProg(false);
 $('overlay').onclick=()=>{ openSheet(false); openProg(false); };
 document.querySelectorAll('#ptabs button').forEach(b=>b.onclick=()=>{ ptab=b.dataset.tab; $('psheet').scrollTop=0; renderSheet(); });
@@ -867,7 +902,213 @@ function renderKeys(){
   document.querySelectorAll('#progBody .kbtn').forEach(b=>b.onclick=()=>startFocus([b.dataset.k]));
 }
 
-markSegs(); applyVis(); draw(); next(); setInterval(tick,250); initCloud();
+/* ================= czas ćwiczeń ================= */
+let meta={time:0, days:{}, exams:{}, chal:{}};
+try{ Object.assign(meta, JSON.parse(localStorage.getItem('soroban_meta')||'{}')); }catch(e){}
+let lastAct=Date.now(), metaDirty=false, metaTick=0;
+function saveMeta(){ try{ localStorage.setItem('soroban_meta', JSON.stringify(meta)); }catch(e){} metaDirty=true; }
+document.addEventListener('pointerdown', ()=>{ lastAct=Date.now(); }, true);
+function countTime(){
+  if (document.visibilityState && document.visibilityState!=='visible') return;
+  const now=Date.now();
+  const busy = (phase==='show' && tStart && now-tStart<600000)
+            || (chal && chal.stage==='run' && now-chal.t0<1800000)
+            || now-lastAct<90000;
+  if (!busy) return;
+  meta.time++;
+  const dk=dayKey(now); meta.days[dk]=(meta.days[dk]||0)+1;
+  metaTick++;
+  if (metaTick%15===0) saveMeta();
+  if (metaTick%60===0){ pushMeta(); renderStats(); }
+}
+document.addEventListener('visibilitychange', ()=>{ if (document.visibilityState!=='visible'){ saveMeta(); pushMeta(); } });
+const fmtClock = ms => { const s=Math.max(0,Math.floor(ms/1000)); return Math.floor(s/60)+':'+String(s%60).padStart(2,'0'); };
+const fmtDur = sec => { const s=Math.max(0,Math.floor(sec)), h=Math.floor(s/3600), m=Math.floor(s%3600/60);
+  return h ? h+' h '+String(m).padStart(2,'0')+' min' : (m||s===0 ? m+' min' : '<1 min'); };
+const dateStr = t => { const d=new Date(t); return d.getDate()+'.'+String(d.getMonth()+1).padStart(2,'0')+'.'+d.getFullYear(); };
+async function pushMeta(){
+  if (!cloud || !metaDirty) return;
+  metaDirty=false;
+  try{ await cloud.doc('meta').set(JSON.parse(JSON.stringify(meta))); }catch(e){ metaDirty=true; }
+}
+function mergeMeta(o){
+  if (!o) return;
+  meta.time=Math.max(meta.time, o.time||0);
+  for (const k in (o.days||{})) meta.days[k]=Math.max(meta.days[k]||0, o.days[k]||0);
+  for (const k in (o.exams||{})){
+    const a=meta.exams[k]||{}, b=o.exams[k]||{};
+    meta.exams[k]={ passed: a.passed&&b.passed ? Math.min(a.passed,b.passed) : (a.passed||b.passed||0),
+      tries: Math.max(a.tries||0,b.tries||0), best: Math.max(a.best||0,b.best||0),
+      failAt: (a.failAt!=null||b.failAt!=null) ? Math.max(a.failAt||0,b.failAt||0) : undefined };
+  }
+  for (const k in (o.chal||{})){
+    const a=meta.chal[k]||{}, b=o.chal[k]||{}, seen=new Set(), runs=[];
+    (a.runs||[]).concat(b.runs||[]).forEach(r=>{ if (!seen.has(r.t)){ seen.add(r.t); runs.push(r); } });
+    runs.sort((x,y)=>x.t-y.t);
+    meta.chal[k]={ best: a.best&&b.best ? Math.min(a.best,b.best) : (a.best||b.best||0), n: Math.max(a.n||0,b.n||0), runs: runs.slice(-20) };
+  }
+}
+
+/* ================= egzaminy na stopnie ================= */
+const LEVELS=[
+  {id:'k10', name:'10 kyu', h:0.25, lim:3,  parts:[{mode:'add',digits:1,terms:3,n:10}]},
+  {id:'k9',  name:'9 kyu',  h:0.75, lim:4,  parts:[{mode:'mix',digits:1,terms:5,n:10}]},
+  {id:'k8',  name:'8 kyu',  h:1.5,  lim:5,  parts:[{mode:'add',digits:2,terms:3,n:10}]},
+  {id:'k7',  name:'7 kyu',  h:3,    lim:6,  parts:[{mode:'mix',digits:2,terms:4,n:10}]},
+  {id:'k6',  name:'6 kyu',  h:5,    lim:8,  parts:[{mode:'mix',digits:2,terms:5,n:8},{mode:'mul',digits:2,mdig:1,n:4}]},
+  {id:'k5',  name:'5 kyu',  h:8,    lim:9,  parts:[{mode:'mix',digits:3,terms:4,n:8},{mode:'mul',digits:2,mdig:1,n:4}]},
+  {id:'k4',  name:'4 kyu',  h:12,   lim:10, parts:[{mode:'mix',digits:3,terms:5,n:8},{mode:'mul',digits:3,mdig:1,n:4}]},
+  {id:'k3',  name:'3 kyu',  h:18,   lim:12, parts:[{mode:'mix',digits:3,terms:7,n:8},{mode:'mul',digits:2,mdig:2,n:4}]},
+  {id:'k2',  name:'2 kyu',  h:26,   lim:14, parts:[{mode:'mix',digits:4,terms:7,n:8},{mode:'mul',digits:3,mdig:2,n:4}]},
+  {id:'k1',  name:'1 kyu',  h:36,   lim:18, parts:[{mode:'mix',digits:5,terms:10,n:8},{mode:'mul',digits:4,mdig:2,n:4}]},
+  {id:'d1',  name:'1 dan',  h:50,   lim:20, parts:[{mode:'mix',digits:6,terms:10,n:10},{mode:'mul',digits:5,mdig:2,n:5}]}
+];
+const PASS=0.8, FAIL_WAIT=20*60;
+function partDesc(p){
+  const z=p.n+' '+pl(p.n,'zadanie','zadania','zadań');
+  if (p.mode==='mul') return z+' × ('+cyf(p.digits)+' × '+cyf(p.mdig)+')';
+  return z+' '+(p.mode==='add'?'+':'±')+' ('+cyf(p.digits)+', '+p.terms+' '+pl(p.terms,'liczba','liczby','liczb')+')';
+}
+function levelState(i){
+  const L=LEVELS[i], e=meta.exams[L.id]||{};
+  if (e.passed) return {s:'passed'};
+  if (i>0 && !(meta.exams[LEVELS[i-1].id]||{}).passed) return {s:'prev'};
+  const need=L.h*3600;
+  if (meta.time<need) return {s:'time', left:need-meta.time};
+  if (e.failAt!=null && meta.time-e.failAt<FAIL_WAIT) return {s:'cool', left:FAIL_WAIT-(meta.time-e.failAt)};
+  return {s:'open'};
+}
+function currentGrade(){ let g=null; LEVELS.forEach(L=>{ if ((meta.exams[L.id]||{}).passed) g=L; }); return g; }
+function withCfg(p,fn){
+  const ks=['mode','digits','terms','mdig','display'], o={};
+  ks.forEach(k=>o[k]=S[k]);
+  Object.assign(S,{mode:p.mode, digits:p.digits, terms:p.terms||S.terms, mdig:p.mdig||1, display:'all'});
+  try { return fn(); } finally { Object.assign(S,o); }
+}
+function startExam(i){
+  if (levelState(i).s!=='open') return;
+  const L=LEVELS[i], q=[];
+  L.parts.forEach(p=>{ for (let j=0;j<p.n;j++) q.push(withCfg(p,genRaw)); });
+  focus=null; test=null; chal=null;
+  exam={L, q, i:0, res:[], t0:Date.now(), tEnd:Date.now()+L.lim*60000};
+  openProg(false); nextExam();
+}
+function nextExam(){
+  clearTimeout(flashTimer);
+  if (exam.i>=exam.q.length){ finishExam(); return; }
+  cur=exam.q[exam.i]; tries=0; rec=null; lastSec=null; clearAbacus(); startShow();
+}
+function finishExam(){
+  if (!exam || phase==='examdone') return;
+  const N=exam.q.length, ok=exam.res.filter(r=>r.ok).length, need=Math.ceil(N*PASS), now=Date.now(), passed=ok>=need;
+  const e=meta.exams[exam.L.id]||{};
+  e.tries=(e.tries||0)+1; e.best=Math.max(e.best||0, Math.round(ok/N*100));
+  if (passed){ if (!e.passed) e.passed=now; } else e.failAt=meta.time;
+  meta.exams[exam.L.id]=e; saveMeta(); pushMeta();
+  exam.done={ok, N, need, passed, used:Math.min(now,exam.tEnd)-exam.t0, timeout:now>=exam.tEnd};
+  phase='examdone'; tStart=0; render();
+}
+
+/* ================= wyzwania ================= */
+const CHAL=[
+  {id:'s50',  name:'1 + 2 + … + 50',  d:'Dodawaj po kolei wszystkie liczby od 1 do 50.', ans:1275},
+  {id:'s100', name:'1 + 2 + … + 100', d:'Klasyka sorobanu: dodaj po kolei liczby od 1 do 100.', ans:5050},
+  {id:'r100', name:'5050 − 100 − 99 − … − 1', d:'Ustaw 5050 i odejmuj po kolei od 100 w dół do 1.', ans:0},
+  {id:'n9',   name:'123456789 dodane 9 razy', d:'Dodaj 123456789 dziewięć razy. Potrzebujesz co najmniej 10 prętów.', ans:1111111101}
+];
+function startChal(id){
+  focus=null; test=null; exam=null;
+  chal={c:CHAL.find(c=>c.id===id), stage:'ready'};
+  phase='chal'; tStart=0; clearAbacus(); openProg(false); render();
+}
+function renderSpecial(){
+  $('banner').classList.add('hidden');
+  const a=$('actions'); let html='', binds=[];
+  if (phase==='examdone'){
+    const d=exam.done, L=exam.L, nx=LEVELS[LEVELS.indexOf(L)+1];
+    $('metaBtn').textContent='🏅 Egzamin '+L.name;
+    html+='<div class="score" style="font-size:44px;color:'+(d.passed?'var(--ok)':'var(--bad)')+'">'+(d.passed?'Zdany! 🎉':'Niezdany')+'</div>';
+    html+='<div class="sub" style="font-size:16px;text-align:center">'+d.ok+' z '+d.N+' dobrze (potrzeba '+d.need+')<br>czas '+fmtClock(d.used)+' z '+L.lim+':00'+(d.timeout?' – skończył się czas':'')+'</div>';
+    if (d.passed){
+      html+='<div class="feedback ok">Twój stopień: '+L.name+'</div>';
+      if (nx) html+='<div class="ask">Egzamin na '+nx.name+' odblokuje się po '+fmtDur(nx.h*3600)+' ćwiczeń łącznie (masz '+fmtDur(meta.time)+').</div>';
+    } else html+='<div class="ask">Poćwicz jeszcze '+(FAIL_WAIT/60)+' min i spróbuj ponownie. Pomoże zakładka „🎯 Trudne układy”.</div>';
+    a.innerHTML='<button class="btn sec" id="aGr">🏅 Stopnie</button><button class="btn pri" id="aCont">Ćwicz dalej</button>';
+    binds=[['aGr',()=>{ exam=null; next(); openProg(true,'grade'); }], ['aCont',()=>{ exam=null; next(); }]];
+  } else {
+    const c=chal.c, r=meta.chal[c.id]||{};
+    $('metaBtn').textContent='⚡ Wyzwanie';
+    const fs=c.name.length>18?24:30;
+    html+='<div style="font-size:'+fs+'px;font-weight:800;text-align:center;line-height:1.2;margin-top:6px">'+c.name+'</div>';
+    if (chal.stage==='ready'){
+      html+='<div class="sub" style="font-size:15px;text-align:center">'+c.d+'</div>';
+      html+='<div class="ask">'+(r.best?'Twój rekord: <b>'+fmtClock(r.best*1000)+'</b> · ukończone '+r.n+'×':'Jeszcze bez rekordu')+'</div>';
+      a.innerHTML='<button class="btn sec" id="aBack">Wróć</button><button class="btn pri" id="aGo">▶ Start</button>';
+      binds=[['aBack',()=>{ chal=null; next(); }], ['aGo',()=>{ chal.stage='run'; chal.t0=Date.now(); render(); }]];
+    } else if (chal.stage==='run'){
+      html+='<div class="big" id="chT" style="font-size:64px;margin-top:8px">'+fmtClock(Date.now()-chal.t0)+'</div><div class="sub">Licz na sorobanie. Naciśnij „Gotowe”, gdy skończysz.</div>';
+      a.innerHTML='<button class="btn sec" id="aStop">Przerwij</button><button class="btn pri" id="aDone">Gotowe</button>';
+      binds=[['aStop',()=>{ chal.stage='ready'; render(); }],
+             ['aDone',()=>{ chal.sec=Math.round((Date.now()-chal.t0)/100)/10; chal.stage='reveal'; render(); if (c.ans<1e9) setAbacus(c.ans); }]];
+    } else if (chal.stage==='reveal'){
+      const len=String(c.ans).length;
+      html+='<div class="sub">Twój czas: <b>'+fmtClock(chal.sec*1000)+'</b></div><div class="ask">Wynik powinien wyjść:</div>';
+      html+='<div class="score" style="color:var(--ok);font-size:'+(len>6?Math.round(400/len):64)+'px">'+c.ans+'</div><div class="ask">Zgadza się z Twoim sorobanem?</div>';
+      a.innerHTML='<button class="btn bad" id="aBad">✗ Źle</button><button class="btn good" id="aOk">✓ Dobrze</button>';
+      binds=[['aBad',()=>{ chal.stage='done'; chal.ok=false; render(); }],
+             ['aOk',()=>{
+                const rr=meta.chal[c.id]||{n:0}; rr.n=(rr.n||0)+1;
+                chal.newBest=!rr.best || chal.sec<rr.best; chal.prev=rr.best;
+                if (chal.newBest) rr.best=chal.sec;
+                rr.runs=(rr.runs||[]).concat({t:Date.now(), s:chal.sec}).slice(-20);
+                meta.chal[c.id]=rr; saveMeta(); pushMeta();
+                chal.stage='done'; chal.ok=true; render(); }]];
+    } else {
+      if (chal.ok){
+        html+='<div class="score" style="font-size:52px;margin-top:8px">'+fmtClock(chal.sec*1000)+'</div>';
+        html+= chal.newBest ? '<div class="feedback ok">🏆 Nowy rekord!'+(chal.prev?' Poprzedni: '+fmtClock(chal.prev*1000):'')+'</div>'
+                            : '<div class="feedback info">Rekord: '+fmtClock(r.best*1000)+'</div>';
+      } else html+='<div class="feedback bad">Wynik się nie zgodził – spróbuj jeszcze raz 💪</div>';
+      a.innerHTML='<button class="btn sec" id="aEnd">Zakończ</button><button class="btn pri" id="aAgain">Jeszcze raz</button>';
+      binds=[['aEnd',()=>{ chal=null; next(); }], ['aAgain',()=>{ chal.stage='ready'; clearAbacus(); render(); }]];
+    }
+  }
+  $('pbody').innerHTML=html;
+  binds.forEach(([id,f])=>{ const el=$(id); if (el) el.onclick=f; });
+}
+
+/* ================= zakładki: stopnie i wyzwania ================= */
+function renderGrades(){
+  const g=currentGrade(), today=meta.days[dayKey(Date.now())]||0;
+  let w=0; for (let i=0;i<7;i++){ const d=new Date(); d.setDate(d.getDate()-i); w+=meta.days[dayKey(d.getTime())]||0; }
+  let h='<div class="tot"><div><b>'+(g?g.name:'–')+'</b><small>twój stopień</small></div><div><b>'+fmtDur(meta.time)+'</b><small>czas ćwiczeń</small></div><div><b>'+fmtDur(today)+'</b><small>dziś · '+fmtDur(w)+' w 7 dni</small></div></div>';
+  h+='<div class="verdict info"><span class="em">🏅</span>Stopnie są wzorowane na japońskich egzaminach sorobanu (od 10 kyu w górę do dan), ale poziomy i limity są ustalone pod tę apkę. Kolejny egzamin odblokowuje się po zdaniu poprzedniego i przećwiczeniu wymaganego czasu. Zdajesz, gdy masz co najmniej 80% dobrze w limicie czasu.</div>';
+  h+='<div class="klist">'+LEVELS.map((L,i)=>{
+    const st=levelState(i), e=meta.exams[L.id]||{};
+    let right;
+    if (st.s==='passed') right='<span class="kpass">✅ zdany<br>'+dateStr(e.passed)+'</span>';
+    else if (st.s==='open') right='<button class="kbtn" data-ex="'+i+'">Przystąp</button>';
+    else if (st.s==='time') right='<span class="klock">🔒 za '+fmtDur(st.left)+'<br>ćwiczeń</span>';
+    else if (st.s==='cool') right='<span class="klock">⏳ za '+fmtDur(st.left)+'<br>ćwiczeń</span>';
+    else right='<span class="klock">🔒 najpierw<br>'+LEVELS[i-1].name+'</span>';
+    return '<div class="krow"><div class="kf">'+L.name+'<small>'+L.parts.map(partDesc).join(' + ')+' · limit '+L.lim+' min</small>'+
+      (e.tries&&!e.passed?'<small>podejścia: '+e.tries+' · najlepiej '+e.best+'%</small>':'')+'</div>'+right+'</div>';
+  }).join('')+'</div>';
+  $('progBody').innerHTML=h;
+  document.querySelectorAll('#progBody [data-ex]').forEach(b=>b.onclick=()=>startExam(+b.dataset.ex));
+}
+function renderChals(){
+  let h='<div class="verdict info"><span class="em">⚡</span>Klasyczne wyzwania sorobanu. Liczysz na swoim liczydle na czas i bijesz własne rekordy.</div><div class="klist">';
+  CHAL.forEach(c=>{
+    const r=meta.chal[c.id]||{};
+    h+='<div class="krow"><div class="kf">'+c.name+'<small>'+c.d+'</small><small>'+(r.best?'🏆 rekord '+fmtClock(r.best*1000)+' · ukończone '+r.n+'×':'jeszcze nie ukończone')+'</small></div><button class="kbtn" data-ch="'+c.id+'">Start</button></div>';
+  });
+  $('progBody').innerHTML=h+'</div>';
+  document.querySelectorAll('#progBody [data-ch]').forEach(b=>b.onclick=()=>startChal(b.dataset.ch));
+}
+function examAvailable(){ return LEVELS.some((L,i)=>levelState(i).s==='open'); }
+
+markSegs(); applyVis(); draw(); next(); setInterval(tick,250); setInterval(countTime,1000); initCloud();
 if ('serviceWorker' in navigator && location.protocol==='https:') { try { navigator.serviceWorker.register('sw.js'); } catch(e){} }
 </script>
 </body>
